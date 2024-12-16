@@ -4,6 +4,9 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+ffmpeg.setFfmpegPath(ffmpegPath);
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -67,6 +70,55 @@ app.post('/api/upload', upload.single('video'), (req, res) => {
   } catch (error) {
     console.error('Upload error:', error);
     res.status(500).json({ error: '视频上传失败: ' + error.message });
+  }
+});
+
+// Video analysis endpoint
+app.post('/api/analyze', async (req, res) => {
+  try {
+    const { filename } = req.body;
+    if (!filename) {
+      return res.status(400).json({ error: '请提供视频文件名' });
+    }
+
+    const videoPath = path.join(uploadDir, filename);
+    if (!fs.existsSync(videoPath)) {
+      return res.status(404).json({ error: '视频文件不存在' });
+    }
+
+    ffmpeg.ffprobe(videoPath, (err, metadata) => {
+      if (err) {
+        console.error('Analysis error:', err);
+        return res.status(500).json({ error: '视频分析失败: ' + err.message });
+      }
+
+      const videoStream = metadata.streams.find(stream => stream.codec_type === 'video');
+      if (!videoStream) {
+        return res.status(400).json({ error: '无法识别视频流' });
+      }
+
+      const analysis = {
+        duration: metadata.format.duration,
+        size: metadata.format.size,
+        bitrate: metadata.format.bit_rate,
+        format: metadata.format.format_name,
+        video: {
+          codec: videoStream.codec_name,
+          width: videoStream.width,
+          height: videoStream.height,
+          fps: eval(videoStream.r_frame_rate),
+          aspect_ratio: videoStream.display_aspect_ratio
+        }
+      };
+
+      res.json({
+        message: '视频分析完成',
+        analysis
+      });
+    });
+  } catch (error) {
+    console.error('Analysis error:', error);
+    res.status(500).json({ error: '视频分析失败: ' + error.message });
   }
 });
 
