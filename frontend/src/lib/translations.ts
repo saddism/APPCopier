@@ -22,12 +22,25 @@ interface UploadTranslation {
 
 interface Translations {
   [key: string]: {
+    nav: {
+      products: string;
+      upload: string;
+      login: string;
+    };
     upload: UploadTranslation;
+    footer: {
+      rights: string;
+    };
   }
 }
 
 const translations: Translations = {
   en: {
+    nav: {
+      products: 'Products',
+      upload: 'Upload',
+      login: 'Sign In'
+    },
     upload: {
       title: 'Upload Video',
       description: 'Upload your app screen recording video for detailed analysis and PRD generation.',
@@ -44,9 +57,17 @@ const translations: Translations = {
         sizeLimitExceeded: 'Upload failed, please check if video size exceeds 500MB or try again',
         default: 'Upload failed, please try again'
       }
+    },
+    footer: {
+      rights: 'All rights reserved.'
     }
   },
   zh: {
+    nav: {
+      products: '产品列表',
+      upload: '上传视频',
+      login: '登录'
+    },
     upload: {
       title: '上传视频',
       description: '上传您的APP操作视频，获取详细的功能分析和PRD文档。',
@@ -63,6 +84,9 @@ const translations: Translations = {
         sizeLimitExceeded: '上传出错，请检查视频大小是否超过500MB或重试',
         default: '上传失败，请重试'
       }
+    },
+    footer: {
+      rights: '保留所有权利。'
     }
   }
 };
