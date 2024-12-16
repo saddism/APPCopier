@@ -39,7 +39,7 @@ function App() {
       const response = await fetch(baseUrl, {
         method: 'POST',
         headers: {
-          'Authorization': 'Basic ' + btoa('user:c6d00684d73ed3ccb3b65227c75fe700')
+          'Authorization': 'Basic ' + btoa('devin:8d55f0c17d37edef9d44c20307bbfbfb')
         },
         body: formData,
         credentials: 'include',
