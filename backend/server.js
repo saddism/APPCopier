@@ -8,6 +8,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 const { createWorker } = require('tesseract.js');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+require('dotenv').config();
 
 // Set ffmpeg path
 ffmpeg.setFfmpegPath(ffmpegPath);
@@ -25,7 +26,28 @@ const framesDir = path.join(__dirname, 'frames');
 });
 
 // Initialize Gemini API
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY);
+
+// Verify API key is configured
+if (!process.env.GOOGLE_GEMINI_API_KEY) {
+  console.error('Error: GOOGLE_GEMINI_API_KEY is not configured');
+  process.exit(1);
+}
+
+// Test Gemini API configuration
+async function testGeminiAPI() {
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    await model.generateContent('Test connection');
+    console.log('Gemini API configured successfully');
+  } catch (error) {
+    console.error('Gemini API configuration error:', error);
+    process.exit(1);
+  }
+}
+
+// Run API test
+testGeminiAPI();
 
 // Middleware with specific CORS configuration
 app.use(cors({
@@ -89,69 +111,67 @@ async function analyzeFrames(framesDir) {
   return results;
 }
 
-// Analyze app functionality using basic analysis
+// Analyze app functionality using Gemini
 async function analyzeAppFunctionality(ocrResults) {
-  // Basic analysis of OCR results without Gemini
-  const analysis = {
-    appInfo: {
-      positioning: "基于OCR文本分析的应用定位",
-      targetUsers: "根据界面文本推断的目标用户群",
-    },
-    features: [],
-    navigation: [],
-    workflow: [],
-    technical: {
-      implementation: [],
-      dataFlow: [],
-      testing: []
-    }
-  };
+  try {
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
-  // Analyze each frame's text
-  for (const result of ocrResults) {
-    const text = result.text.toLowerCase();
+    // Prepare context from OCR results
+    const context = ocrResults.map(result => result.text).join('\n');
 
-    // Extract features and navigation items
-    const lines = text.split('\n').filter(line => line.trim());
-    for (const line of lines) {
-      // Identify potential navigation items
-      if (line.includes('首页') || line.includes('列表') || line.includes('设置')) {
-        analysis.navigation.push(line.trim());
+    // Create prompt for Gemini
+    const prompt = `分析以下APP界面文本，生成详细的产品需求文档：
+
+${context}
+
+请按照以下格式输出分析结果：
+1. 应用定位和目标用户群
+2. 应用导航结构
+3. 功能列表和操作流程
+4. 技术功能清单
+5. 数据流程
+6. 功能实现建议
+7. 单元测试计划`;
+
+    // Generate analysis using Gemini
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const analysis = response.text();
+
+    // Parse Gemini's response into structured format
+    const sections = analysis.split(/\d+\./);
+    return {
+      appInfo: {
+        positioning: sections[1]?.trim() || "无法确定应用定位",
+        targetUsers: sections[1]?.trim() || "无法确定目标用户群",
+      },
+      navigation: sections[2]?.trim().split('\n').filter(Boolean) || [],
+      features: sections[3]?.trim().split('\n').filter(Boolean) || [],
+      technical: {
+        implementation: sections[4]?.trim().split('\n').filter(Boolean) || [],
+        dataFlow: sections[5]?.trim().split('\n').filter(Boolean) || [],
+        functionality: sections[6]?.trim().split('\n').filter(Boolean) || [],
+        testing: sections[7]?.trim().split('\n').filter(Boolean) || []
       }
-
-      // Identify potential features
-      if (line.includes('按钮') || line.includes('选择') || line.includes('搜索')) {
-        analysis.features.push(line.trim());
+    };
+  } catch (error) {
+    console.error('Gemini analysis error:', error);
+    // Fallback to basic analysis if Gemini fails
+    return {
+      appInfo: {
+        positioning: "分析失败 - 使用基础分析模式",
+        targetUsers: "分析失败 - 使用基础分析模式",
+      },
+      features: [],
+      navigation: [],
+      technical: {
+        implementation: [],
+        dataFlow: [],
+        functionality: [],
+        testing: []
       }
-
-      // Identify workflow steps
-      if (line.includes('步骤') || line.includes('下一步') || line.includes('完成')) {
-        analysis.workflow.push(line.trim());
-      }
-    }
-
-    // Basic technical analysis
-    if (text.includes('登录') || text.includes('注册')) {
-      analysis.technical.implementation.push('用户认证系统');
-      analysis.technical.dataFlow.push('用户数据流程');
-      analysis.technical.testing.push('用户认证测试');
-    }
-    if (text.includes('列表') || text.includes('数据')) {
-      analysis.technical.implementation.push('数据展示模块');
-      analysis.technical.dataFlow.push('数据获取和展示流程');
-      analysis.technical.testing.push('数据加载测试');
-    }
+    };
   }
-
-  // Remove duplicates
-  analysis.navigation = [...new Set(analysis.navigation)];
-  analysis.features = [...new Set(analysis.features)];
-  analysis.workflow = [...new Set(analysis.workflow)];
-  analysis.technical.implementation = [...new Set(analysis.technical.implementation)];
-  analysis.technical.dataFlow = [...new Set(analysis.technical.dataFlow)];
-  analysis.technical.testing = [...new Set(analysis.technical.testing)];
-
-  return analysis;
 }
 
 // Routes
