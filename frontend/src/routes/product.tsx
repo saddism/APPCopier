@@ -1,11 +1,12 @@
-import React from 'react'
 import { Route, useParams } from '@tanstack/react-router'
 import { Helmet } from 'react-helmet-async'
+import { rootRoute } from '@/routes/root'
 
 export const productRoute = new Route({
+  getParentRoute: () => rootRoute,
   path: '/products/$slug',
   component: () => {
-    const { slug } = useParams()
+    const { slug } = useParams({ from: '/products/$slug' })
     return (
       <>
         <Helmet>

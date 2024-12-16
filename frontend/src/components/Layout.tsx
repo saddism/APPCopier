@@ -3,17 +3,25 @@ import * as NavigationMenu from '@radix-ui/react-navigation-menu'
 import { Link } from '@tanstack/react-router'
 import { useTranslation } from '@/lib/translations'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/use-auth'
 
 interface LayoutProps {
   children: React.ReactNode
 }
 
 export function Layout({ children }: LayoutProps) {
-  const { t } = useTranslation()
-  const [language, setLanguage] = React.useState<'zh' | 'en'>('zh')
+  const { t, setLanguage } = useTranslation()
+  const { user, signOut } = useAuth()
+  const [language, setLocalLanguage] = React.useState<'zh' | 'en'>(() => {
+    const savedLang = localStorage.getItem('language')
+    return (savedLang === 'en' || savedLang === 'zh') ? savedLang : 'zh'
+  })
 
   const toggleLanguage = () => {
-    setLanguage(prev => prev === 'zh' ? 'en' : 'zh')
+    const newLang = language === 'zh' ? 'en' : 'zh'
+    setLocalLanguage(newLang)
+    setLanguage(newLang)
+    localStorage.setItem('language', newLang)
   }
 
   return (
@@ -45,12 +53,29 @@ export function Layout({ children }: LayoutProps) {
               >
                 {language === 'zh' ? 'EN' : '中文'}
               </button>
-              <Link
-                to="/auth/login"
-                className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-500 transition-colors"
-              >
-                {t('nav.login')}
-              </Link>
+              {user ? (
+                <>
+                  <Link to="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                    {t('nav.dashboard')}
+                  </Link>
+                  <button
+                    onClick={signOut}
+                    className="text-sm font-medium text-muted-foreground hover:text-foreground"
+                  >
+                    {t('nav.signOut')}
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/login"
+                  className={cn(
+                    "rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white",
+                    "hover:bg-blue-500 transition-colors"
+                  )}
+                >
+                  {t('nav.login')}
+                </Link>
+              )}
             </div>
           </NavigationMenu.Root>
         </div>
@@ -60,7 +85,7 @@ export function Layout({ children }: LayoutProps) {
       </main>
       <footer className="mt-auto border-t bg-muted/50">
         <div className="container py-6 text-center text-sm text-muted-foreground">
-          © 2024 APPCopier. {t('footer.rights')}
+          {t('footer.copyright')}
         </div>
       </footer>
     </div>

@@ -48,6 +48,7 @@ export const loginRoute = new Route({
         toast({
           title: "登录成功",
           description: "正在跳转...",
+          variant: "default",
         })
         window.location.href = '/upload'
       } catch (error) {

@@ -4,16 +4,17 @@ import { Upload } from 'lucide-react'
 import { Helmet } from 'react-helmet-async'
 import { rootRoute } from '@/routes/root'
 import { ProductCard } from '@/components/ProductCard'
+import { useTranslation } from '@/lib/translations'
 
 // Sample data - will be replaced with real data later
 const featuredProducts = [
   {
     id: 'demo-app',
-    title: '示例社交应用分析',
-    description: '深入分析社交应用的核心功能、用户交互流程和技术实现方案',
-    thumbnail: '/demo-app-thumbnail.jpg',
-    category: '社交应用',
-    date: '2023-12-16'
+    titleKey: 'products.demo.title',
+    descriptionKey: 'products.demo.description',
+    categoryKey: 'products.demo.category',
+    date: '2023-12-16',
+    thumbnail: undefined
   }
 ]
 
@@ -22,22 +23,23 @@ export const indexRoute = new Route({
   path: '/',
   component: () => {
     const navigate = useNavigate()
+    const { t } = useTranslation()
 
     return (
       <>
         <Helmet>
-          <title>APP视频分析系统 - 智能APP功能分析工具</title>
-          <meta name="description" content="上传APP操作视频，快速获取详细的功能分析和PRD文档。智能分析APP界面、功能和用户体验。" />
-          <meta name="keywords" content="APP分析,视频分析,PRD生成,功能分析,用户体验" />
+          <title>{t('app.title')} - {t('meta.description')}</title>
+          <meta name="description" content={t('meta.description')} />
+          <meta name="keywords" content={t('meta.keywords')} />
           <link rel="canonical" href="/" />
         </Helmet>
         <div className="max-w-6xl mx-auto px-4">
           <section className="text-center py-16 md:py-24">
             <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
-              APP视频分析系统
+              {t('app.title')}
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              上传您的APP操作视频，获取详细的功能分析和PRD文档
+              {t('app.description')}
             </p>
             <Button
               size="lg"
@@ -48,24 +50,32 @@ export const indexRoute = new Route({
               })}
             >
               <Upload className="w-5 h-5" />
-              立即开始分析
+              {t('app.startAnalysis')}
             </Button>
           </section>
 
           <section className="py-16">
             <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-bold">最新分析案例</h2>
+              <h2 className="text-2xl font-bold">{t('products.latestTitle')}</h2>
               <Button
                 variant="ghost"
                 onClick={() => navigate({ to: '/products' })}
                 className="text-blue-600 hover:text-blue-700"
               >
-                查看更多 →
+                {t('products.viewMore')} →
               </Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {featuredProducts.map(product => (
-                <ProductCard key={product.id} {...product} />
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  titleKey={product.titleKey}
+                  descriptionKey={product.descriptionKey}
+                  categoryKey={product.categoryKey}
+                  date={product.date}
+                  thumbnail={product.thumbnail}
+                />
               ))}
             </div>
           </section>

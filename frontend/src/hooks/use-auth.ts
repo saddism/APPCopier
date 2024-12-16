@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { auth, type User, type AuthState } from '@/lib/auth';
+import { auth, type AuthState } from '@/lib/auth';
 
 export function useAuth() {
   const [state, setState] = useState<AuthState>({
