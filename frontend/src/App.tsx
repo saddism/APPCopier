@@ -29,21 +29,37 @@ function App() {
     const formData = new FormData()
     formData.append('video', file)
 
+    console.log('Uploading file:', file.name, 'size:', file.size)
+    console.log('FormData entries:', Array.from(formData.entries()))
+
     try {
-      const response = await fetch('https://user:f55d085a94efa2626479ee9391805694@video-analysis-app-tunnel-diwqngzg.devinapps.com/api/upload', {
+      const baseUrl = 'https://video-analysis-app-tunnel-dgup6riq.devinapps.com/api/upload'
+      console.log('Sending request to:', baseUrl)
+
+      const response = await fetch(baseUrl, {
         method: 'POST',
+        headers: {
+          'Authorization': 'Basic ' + btoa('user:c6d00684d73ed3ccb3b65227c75fe700')
+        },
         body: formData,
+        credentials: 'include',
       })
+      console.log('Response status:', response.status)
 
       const data = await response.json()
+      console.log('Response data:', data)
+
       if (response.ok) {
         setMessage("视频上传成功！")
         setFile(null)
       } else {
-        setMessage(`上传失败: ${data.error}`)
+        const errorMessage = data.error || '上传失败，请重试'
+        console.error('Upload failed:', errorMessage)
+        setMessage(errorMessage)
       }
     } catch (error) {
-      setMessage("上传出错，请重试")
+      console.error('Upload error:', error)
+      setMessage("上传出错，请检查视频大小是否超过500MB或重试")
     } finally {
       setUploading(false)
     }
