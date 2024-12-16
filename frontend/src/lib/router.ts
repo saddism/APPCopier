@@ -7,6 +7,7 @@ import { loginRoute } from '@/routes/auth/login'
 import { registerRoute } from '@/routes/auth/register'
 import { uploadRoute } from '@/routes/upload'
 import { productListRoute, productDetailRoute } from '@/routes/products'
+import { dashboardRoute } from '@/routes/dashboard'
 
 // SEO-friendly route configuration with language support
 export const routeConfig = {
@@ -15,6 +16,7 @@ export const routeConfig = {
     login: '/login',
     register: '/register'
   },
+  dashboard: '/dashboard',
   products: {
     list: '/products',
     details: '/products/:slug'
@@ -34,6 +36,7 @@ const routeTree = rootRoute.addChildren([
   uploadRoute,
   productListRoute,
   productDetailRoute,
+  dashboardRoute,
 ])
 
 // Configure router with preloading
