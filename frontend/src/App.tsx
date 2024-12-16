@@ -30,7 +30,7 @@ function App() {
     formData.append('video', file)
 
     try {
-      const response = await fetch('http://localhost:3000/api/upload', {
+      const response = await fetch('https://user:f55d085a94efa2626479ee9391805694@video-analysis-app-tunnel-diwqngzg.devinapps.com/api/upload', {
         method: 'POST',
         body: formData,
       })
