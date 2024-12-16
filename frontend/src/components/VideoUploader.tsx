@@ -1,15 +1,17 @@
+import * as React from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useState } from 'react'
 import { Upload } from "lucide-react"
-import { useAuthContext } from '../providers/AuthProvider'
-import { auth } from '../lib/auth'
+import { useAuthContext } from '@/providers/AuthProvider'
+import { auth } from '@/lib/auth'
+import { useTranslation } from '@/lib/translations'
 
 export function VideoUploader() {
-  const [file, setFile] = useState<File | null>(null)
-  const [uploading, setUploading] = useState(false)
-  const [message, setMessage] = useState("")
-  const { user } = useAuthContext();
+  const [file, setFile] = React.useState<File | null>(null)
+  const [uploading, setUploading] = React.useState(false)
+  const [message, setMessage] = React.useState("")
+  const { user } = useAuthContext()
+  const { t } = useTranslation()
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
@@ -17,19 +19,19 @@ export function VideoUploader() {
       setFile(selectedFile)
       setMessage("")
     } else {
-      setMessage("请选择视频文件")
+      setMessage(t('upload.error.invalidType'))
       setFile(null)
     }
   }
 
   const handleUpload = async () => {
     if (!file) {
-      setMessage("请先选择视频文件")
+      setMessage(t('upload.error.noFile'))
       return
     }
 
     if (!user?.emailVerified) {
-      setMessage("请先验证邮箱")
+      setMessage(t('upload.error.verifyEmail'))
       return
     }
 
@@ -37,7 +39,7 @@ export function VideoUploader() {
       try {
         await auth.useTrial()
       } catch (error) {
-        setMessage("试用次数已用完，请升级会员")
+        setMessage(t('upload.error.trialUsed'))
         return
       }
     }
@@ -60,15 +62,15 @@ export function VideoUploader() {
       const data = await response.json()
 
       if (response.ok) {
-        setMessage("视频上传成功！")
+        setMessage(t('upload.success'))
         setFile(null)
       } else {
-        const errorMessage = data.error || '上传失败，请重试'
+        const errorMessage = data.error || t('upload.error.default')
         setMessage(errorMessage)
       }
     } catch (error) {
       console.error('Upload error:', error)
-      setMessage("上传出错，请检查视频大小是否超过500MB或重试")
+      setMessage(t('upload.error.sizeLimitExceeded'))
     } finally {
       setUploading(false)
     }
@@ -76,24 +78,25 @@ export function VideoUploader() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col items-center p-4 border-2 border-dashed border-gray-300 rounded-lg">
-        <Upload className="w-12 h-12 text-gray-400 mb-2" />
+      <div className="flex flex-col items-center p-6 border-2 border-dashed border-gray-300 rounded-lg bg-white/50 hover:bg-white/80 transition-colors">
+        <Upload className="w-12 h-12 text-gray-400 mb-4" />
+        <p className="text-sm text-gray-600 mb-4">{t('upload.selectVideo')}</p>
         <Input
           type="file"
           accept="video/*"
           onChange={handleFileChange}
-          className="w-full"
+          className="w-full max-w-sm"
         />
       </div>
 
       {file && (
         <div className="text-sm text-gray-600">
-          已选择: {file.name}
+          {t('upload.selected')}: {file.name}
         </div>
       )}
 
       {message && (
-        <div className={`text-sm ${message.includes('成功') ? 'text-green-600' : 'text-red-600'}`}>
+        <div className={`text-sm ${message.includes(t('upload.success')) ? 'text-green-600' : 'text-red-600'}`}>
           {message}
         </div>
       )}
@@ -103,7 +106,7 @@ export function VideoUploader() {
         disabled={!file || uploading}
         className="w-full"
       >
-        {uploading ? "上传中..." : "上传视频"}
+        {uploading ? t('upload.uploading') : t('upload.uploadButton')}
       </Button>
     </div>
   )
