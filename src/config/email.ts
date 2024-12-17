@@ -12,6 +12,35 @@ export const emailConfig = {
 
 export const transporter = nodemailer.createTransport(emailConfig);
 
+// Generate verification code
+export const generateVerificationCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// Store verification codes with expiration
+const verificationCodes: Record<string, { code: string; expires: number }> = {};
+
+// Store verification code
+export const storeVerificationCode = (email: string, code: string) => {
+  verificationCodes[email] = {
+    code,
+    expires: Date.now() + 10 * 60 * 1000 // 10 minutes expiration
+  };
+};
+
+// Verify code
+export const verifyCode = (email: string, code: string): boolean => {
+  const stored = verificationCodes[email];
+  if (!stored) return false;
+  if (Date.now() > stored.expires) {
+    delete verificationCodes[email];
+    return false;
+  }
+  if (stored.code !== code) return false;
+  delete verificationCodes[email];
+  return true;
+};
+
 export const sendVerificationEmail = async (to: string, verificationCode: string) => {
   const mailOptions = {
     from: 'appcopier@guixian.cn',
@@ -35,9 +64,10 @@ export const sendVerificationEmail = async (to: string, verificationCode: string
 
   try {
     await transporter.sendMail(mailOptions);
-    return true;
+    storeVerificationCode(to, verificationCode);
+    return { success: true };
   } catch (error) {
     console.error('Failed to send verification email:', error);
-    return false;
+    return { success: false, error: '发送验证码失败，请重试' };
   }
 };
