@@ -1,20 +1,31 @@
 <template>
   <view class="language-switcher">
     <button class="switch-btn" @click="toggleLanguage">
-      {{ $t('common.switchLang') }}
+      {{ currentLanguage === 'zh' ? 'English' : '中文' }}
     </button>
   </view>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { locale } = useI18n()
+const currentLanguage = computed(() => locale.value)
 
 const toggleLanguage = () => {
-  locale.value = locale.value === 'zh' ? 'en' : 'zh'
-  // 保存语言偏好到本地存储
-  uni.setStorageSync('language', locale.value)
+  const newLang = locale.value === 'zh' ? 'en' : 'zh'
+  locale.value = newLang
+  uni.setStorageSync('language', newLang)
+
+  // Refresh current page to apply language change
+  const pages = getCurrentPages()
+  const currentPage = pages[pages.length - 1]
+  if (currentPage) {
+    uni.redirectTo({
+      url: '/' + currentPage.route
+    })
+  }
 }
 </script>
 

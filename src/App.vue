@@ -1,9 +1,6 @@
 <template>
   <view class="container">
     <LanguageSwitcher class="lang-switcher" />
-    <view class="debug-info">
-      <text>Current Language: {{ locale }}</text>
-    </view>
     <slot></slot>
   </view>
 </template>
@@ -47,12 +44,5 @@ onHide(() => {
   top: 20rpx;
   right: 20rpx;
   z-index: 1000;
-}
-
-.debug-info {
-  margin-top: 100rpx;
-  padding: 20rpx;
-  background-color: #f5f5f5;
-  border-radius: 8rpx;
 }
 </style>

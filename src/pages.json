@@ -3,37 +3,37 @@
 		{
 			"path": "pages/index/index",
 			"style": {
-				"navigationBarTitleText": "%nav.home%"
+				"navigationBarTitleText": "首页"
 			}
 		},
 		{
 			"path": "pages/upload/index",
 			"style": {
-				"navigationBarTitleText": "%nav.upload%"
+				"navigationBarTitleText": "视频上传"
 			}
 		},
 		{
 			"path": "pages/auth/login",
 			"style": {
-				"navigationBarTitleText": "%nav.login%"
+				"navigationBarTitleText": "登录"
 			}
 		},
 		{
 			"path": "pages/dashboard/index",
 			"style": {
-				"navigationBarTitleText": "%nav.dashboard%"
+				"navigationBarTitleText": "控制台"
 			}
 		},
 		{
 			"path": "pages/products/index",
 			"style": {
-				"navigationBarTitleText": "%nav.products%"
+				"navigationBarTitleText": "产品列表"
 			}
 		},
 		{
 			"path": "pages/products/detail",
 			"style": {
-				"navigationBarTitleText": "%nav.productDetail%"
+				"navigationBarTitleText": "产品详情"
 			}
 		}
 	],
@@ -51,19 +51,19 @@
 		"list": [
 			{
 				"pagePath": "pages/index/index",
-				"text": "%nav.home%"
+				"text": "首页"
 			},
 			{
 				"pagePath": "pages/upload/index",
-				"text": "%nav.upload%"
+				"text": "上传"
 			},
 			{
 				"pagePath": "pages/products/index",
-				"text": "%nav.products%"
+				"text": "产品"
 			},
 			{
 				"pagePath": "pages/dashboard/index",
-				"text": "%nav.dashboard%"
+				"text": "我的"
 			}
 		]
 	},
