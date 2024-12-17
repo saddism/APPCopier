@@ -53,8 +53,8 @@ app.use(cors({
   origin: ['https://video-analysis-app-tunnel-dgup6riq.devinapps.com'],
   credentials: true
 }));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: '500mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '500mb' }));
 
 // Add authentication middleware
 app.use((req, res, next) => {
@@ -68,35 +68,44 @@ app.use((req, res, next) => {
 // Configure multer for video upload
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir);
+    const uploadPath = req.path.includes('/chunk') ?
+      path.join(uploadDir, 'chunks') :
+      uploadDir;
+
+    // Create chunks directory if it doesn't exist
+    if (req.path.includes('/chunk') && !fs.existsSync(path.join(uploadDir, 'chunks'))) {
+      fs.mkdirSync(path.join(uploadDir, 'chunks'), { recursive: true });
+    }
+
+    cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
+    if (req.path.includes('/chunk')) {
+      // For chunks, use format: timestamp-originalname-chunknumber
+      const { index } = req.body;
+      cb(null, `${Date.now()}-${file.originalname}-${index}`);
+    } else {
+      cb(null, `${Date.now()}-${file.originalname}`);
+    }
   }
 });
 
 const upload = multer({
   storage: storage,
-  fileFilter: (req, file, cb) => {
-    console.log('Received file details:', {
-      fieldname: file.fieldname,
-      originalname: file.originalname,
-      encoding: file.encoding,
-      mimetype: file.mimetype,
-      size: file.size
-    });
-
-    // Check if file has a video MIME type
-    if (file.mimetype.startsWith('video/') ||
-        file.originalname.toLowerCase().match(/\.(mp4|mov|avi|wmv)$/)) {
-      console.log('File accepted:', file.originalname);
-      cb(null, true);
-    } else {
-      console.error('File rejected - Invalid type:', file.mimetype);
-      cb(new Error('只支持视频文件上传 (支持的格式: MP4, MOV, AVI, WMV)'));
+  limits: {
+    fileSize: req => {
+      return req.path.includes('/chunk') ?
+        1 * 1024 * 1024 : // 1MB for chunks
+        500 * 1024 * 1024; // 500MB for direct uploads
     }
   },
-  limits: { fileSize: 500 * 1024 * 1024 } // 500MB
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('video/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('只支持视频文件上传'));
+    }
+  }
 });
 
 // Extract frames from video for app analysis
@@ -190,8 +199,73 @@ ${context}
     throw new Error('视频分析失败: ' + error.message);
   }
 }
-
 // Routes
+app.post('/api/upload/chunk', upload.single('chunk'), async (req, res) => {
+  try {
+    const { index, count, filename } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({ error: '未接收到文件分片' });
+    }
+
+    // 如果是最后一个分片，开始合并
+    if (parseInt(index) === parseInt(count) - 1) {
+      const chunks = [];
+      const chunksDir = path.join(uploadDir, 'chunks');
+      const finalPath = path.join(uploadDir, `${Date.now()}-${filename}`);
+
+      // 收集所有分片
+      for (let i = 0; i < count; i++) {
+        const chunkFiles = fs.readdirSync(chunksDir)
+          .filter(f => f.includes(filename) && f.endsWith(`-${i}`));
+
+        if (chunkFiles.length === 1) {
+          chunks.push(path.join(chunksDir, chunkFiles[0]));
+        }
+      }
+
+      // 如果所有分片都存在，开始合并
+      if (chunks.length === parseInt(count)) {
+        const writeStream = fs.createWriteStream(finalPath);
+
+        for (const chunk of chunks) {
+          const content = fs.readFileSync(chunk);
+          writeStream.write(content);
+          // 删除分片文件
+          fs.unlinkSync(chunk);
+        }
+
+        writeStream.end();
+
+        // 开始视频分析
+        await extractFramesForAnalysis(finalPath, framesDir);
+        const frames = fs.readdirSync(framesDir)
+          .filter(f => f.endsWith('.jpg'))
+          .map(f => path.join(framesDir, f));
+        const analysis = await analyzeAppFunctionality(frames);
+
+        res.json({
+          message: '视频上传和分析完成',
+          file: {
+            filename: path.basename(finalPath),
+            path: finalPath,
+            size: fs.statSync(finalPath).size
+          },
+          analysis
+        });
+      } else {
+        res.json({ message: '分片上传成功，等待其他分片' });
+      }
+    } else {
+      res.json({ message: '分片上传成功' });
+    }
+  } catch (error) {
+    console.error('Chunk upload/analysis error:', error.stack || error);
+    res.status(500).json({ error: '分片处理失败: ' + error.message });
+  }
+});
+
+// 保持原有的完整文件上传路由
 app.post('/api/upload', upload.single('video'), async (req, res) => {
   console.log('Received upload request');
   try {
@@ -231,7 +305,12 @@ app.post('/api/upload', upload.single('video'), async (req, res) => {
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ error: '文件大小超过限制 (500MB)' });
+      const isChunk = req.path.includes('/chunk');
+      return res.status(400).json({
+        error: isChunk ?
+          '分片大小超过限制 (2MB)' :
+          '文件大小超过限制 (500MB)'
+      });
     }
     return res.status(400).json({ error: '文件上传错误: ' + err.message });
   }
