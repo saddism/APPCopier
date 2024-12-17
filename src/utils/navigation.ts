@@ -1,8 +1,8 @@
-import { useUserStore } from '@/stores/user'
+import { useUserStore } from '../stores/user'
 
 // Navigation interceptor for protected routes
 uni.addInterceptor('navigateTo', {
-  invoke(e) {
+  invoke(e: UniApp.NavigateToOptions) {
     const userStore = useUserStore()
     const protectedRoutes = [
       '/pages/upload/',
@@ -27,7 +27,7 @@ uni.addInterceptor('navigateTo', {
 
 // Switch back interceptor for protected routes
 uni.addInterceptor('switchTab', {
-  invoke(e) {
+  invoke(e: UniApp.SwitchTabOptions) {
     const userStore = useUserStore()
     const protectedTabs = [
       '/pages/upload/index',
