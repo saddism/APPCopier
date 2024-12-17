@@ -3,6 +3,7 @@ import { createPinia } from 'pinia';
 import App from "./App.vue";
 import i18n from './i18n';
 import { useI18n } from 'vue-i18n';
+import './utils/navigation';
 
 export function createApp() {
   const app = createSSRApp(App);
