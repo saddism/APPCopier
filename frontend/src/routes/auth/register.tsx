@@ -32,7 +32,7 @@ type RegisterForm = z.infer<typeof registerSchema>
 
 export const registerRoute = new Route({
   getParentRoute: () => rootRoute,
-  path: '/register',
+  path: '/auth/register',
   component: () => {
     const [isVerifying, setIsVerifying] = useState(false)
     const [showVerification, setShowVerification] = useState(false)
@@ -84,7 +84,7 @@ export const registerRoute = new Route({
           <title>注册 - APP视频分析系统</title>
           <meta name="description" content="注册账户，免费体验APP视频分析功能，获取详细PRD文档。" />
           <meta name="keywords" content="注册,APP分析,视频分析,用户注册" />
-          <link rel="canonical" href="/register" />
+          <link rel="canonical" href="/auth/register" />
         </Helmet>
         <div className="max-w-md mx-auto py-8">
           <h1 className="text-2xl font-bold mb-6">注册账户</h1>

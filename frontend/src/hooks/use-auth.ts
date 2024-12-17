@@ -10,11 +10,22 @@ export function useAuth() {
 
   // Update state when auth state changes
   useEffect(() => {
-    setState(prev => ({
-      ...prev,
-      user: auth.currentUser,
-      loading: false
-    }));
+    const updateState = () => {
+      setState(prev => ({
+        ...prev,
+        user: auth.currentUser,
+        loading: false
+      }));
+    };
+
+    // Initial state update
+    updateState();
+
+    // Subscribe to auth changes
+    auth.listeners.add(updateState);
+    return () => {
+      auth.listeners.delete(updateState);
+    };
   }, []);
 
   const signUp = useCallback(async (email: string, password: string) => {

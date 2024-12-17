@@ -1,3 +1,5 @@
+import * as React from 'react';
+
 type Language = 'zh' | 'en';
 
 interface TranslationError {
@@ -29,6 +31,7 @@ interface Translations {
       register: string;
       dashboard: string;
       signOut: string;
+      analysis: string;
     };
     app: {
       title: string;
@@ -72,6 +75,21 @@ interface Translations {
     footer: {
       copyright: string;
     };
+    analysis: {
+      title: string;
+      totalAmount: string;
+      totalOrders: string;
+      normalOrders: string;
+      cancelledOrders: string;
+      averageAmount: string;
+      orderDetails: string;
+      orderNumber: string;
+      date: string;
+      amount: string;
+      status: string;
+      normal: string;
+      cancelled: string;
+    };
   }
 }
 
@@ -83,7 +101,8 @@ const translations: Translations = {
       login: 'Sign In',
       register: 'Register',
       dashboard: 'Dashboard',
-      signOut: 'Sign Out'
+      signOut: 'Sign Out',
+      analysis: 'Order Analysis'
     },
     app: {
       title: 'APP Video Analysis System',
@@ -142,6 +161,21 @@ const translations: Translations = {
     },
     footer: {
       copyright: '© 2024 APPCopier. All rights reserved.'
+    },
+    analysis: {
+      title: 'Order Analysis',
+      totalAmount: 'Total Amount (Normal Orders)',
+      totalOrders: 'Total Orders',
+      normalOrders: 'Normal Orders',
+      cancelledOrders: 'Cancelled Orders',
+      averageAmount: 'Average Order Amount',
+      orderDetails: 'Order Details',
+      orderNumber: 'Order Number',
+      date: 'Date',
+      amount: 'Amount',
+      status: 'Status',
+      normal: 'Normal',
+      cancelled: 'Cancelled'
     }
   },
   zh: {
@@ -151,7 +185,8 @@ const translations: Translations = {
       login: '登录',
       register: '注册',
       dashboard: '控制台',
-      signOut: '退出'
+      signOut: '退出',
+      analysis: '订单分析'
     },
     app: {
       title: 'APP视频分析系统',
@@ -210,6 +245,21 @@ const translations: Translations = {
     },
     footer: {
       copyright: '© 2024 APPCopier. 保留所有权利。'
+    },
+    analysis: {
+      title: '订单分析',
+      totalAmount: '正常订单总金额',
+      totalOrders: '订单总数',
+      normalOrders: '正常订单',
+      cancelledOrders: '已取消订单',
+      averageAmount: '平均订单金额',
+      orderDetails: '订单详细信息',
+      orderNumber: '订单编号',
+      date: '日期',
+      amount: '金额',
+      status: '状态',
+      normal: '正常',
+      cancelled: '已取消'
     }
   }
 };
@@ -232,13 +282,20 @@ export function getTranslation(key: string, language: Language = defaultLanguage
 }
 
 export function createTranslationHook() {
-  let currentLanguage: Language = defaultLanguage;
-
   return function useTranslation() {
-    const t = (key: string) => getTranslation(key, currentLanguage);
-    const setLanguage = (lang: Language) => {
-      currentLanguage = lang;
-    };
+    const [currentLanguage, setCurrentLang] = React.useState<Language>(() => {
+      const saved = localStorage.getItem('language');
+      return (saved === 'en' || saved === 'zh') ? saved : defaultLanguage;
+    });
+
+    const t = React.useCallback((key: string) => getTranslation(key, currentLanguage), [currentLanguage]);
+
+    const setLanguage = React.useCallback((lang: Language) => {
+      setCurrentLang(lang);
+      localStorage.setItem('language', lang);
+      window.location.reload(); // Force reload to update all components
+    }, []);
+
     return { t, setLanguage };
   };
 }
