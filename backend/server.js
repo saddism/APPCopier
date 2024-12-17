@@ -100,6 +100,12 @@ const upload = multer({
     }
   },
   fileFilter: (req, file, cb) => {
+    // Skip MIME type validation for chunk uploads
+    if (req.path.includes('/chunk')) {
+      cb(null, true);
+      return;
+    }
+    // Validate MIME type for complete file uploads
     if (file.mimetype.startsWith('video/')) {
       cb(null, true);
     } else {
