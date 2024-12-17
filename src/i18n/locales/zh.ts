@@ -1,4 +1,12 @@
 export default {
+  nav: {
+    home: '首页',
+    upload: '上传',
+    login: '登录',
+    dashboard: '控制台',
+    products: '产品',
+    productDetail: '产品详情'
+  },
   message: {
     hello: '你好',
     upload: {
@@ -25,13 +33,42 @@ export default {
     },
     auth: {
       login: '登录',
-      register: '注册',
+      register: {
+        title: '注册',
+        emailPlaceholder: '请输入邮箱',
+        codePlaceholder: '请输入验证码',
+        passwordPlaceholder: '请输入密码',
+        confirmPasswordPlaceholder: '请确认密码',
+        sendCode: '发送验证码',
+        codeSent: '验证码已发送',
+        submit: '注册',
+        loginLink: '已有账号？登录',
+        emailRequired: '请输入邮箱',
+        allFieldsRequired: '请填写所有字段',
+        passwordMismatch: '两次输入的密码不一致',
+        invalidCode: '验证码无效或已过期',
+        sendCodeError: '发送验证码失败',
+        success: '注册成功',
+        error: '注册失败，请重试'
+      },
       email: '邮箱',
       password: '密码',
       submit: '提交',
       forgotPassword: '忘记密码',
       noAccount: '没有账号？注册',
-      hasAccount: '已有账号？登录'
+      hasAccount: '已有账号？登录',
+      errors: {
+        'auth/invalid-email': '无效的邮箱地址',
+        'auth/user-disabled': '该账号已被禁用',
+        'auth/user-not-found': '用户不存在',
+        'auth/wrong-password': '密码错误',
+        'auth/email-already-in-use': '该邮箱已被注册',
+        'auth/operation-not-allowed': '操作不被允许',
+        'auth/weak-password': '密码强度太弱',
+        'auth/network-request-failed': '网络请求失败',
+        'auth/too-many-requests': '请求次数过多，请稍后再试',
+        'auth/requires-recent-login': '需要重新登录'
+      }
     },
     products: {
       title: '产品列表',

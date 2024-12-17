@@ -1,6 +1,9 @@
 <template>
   <view class="container">
     <LanguageSwitcher class="lang-switcher" />
+    <view class="debug-info">
+      <text>Current Language: {{ locale }}</text>
+    </view>
     <slot></slot>
   </view>
 </template>
@@ -17,11 +20,16 @@ onLaunch(() => {
   if (savedLanguage) {
     locale.value = savedLanguage
   }
-  console.log("App Launch")
+  console.log("App Launch", {
+    currentLocale: locale.value,
+    platform: uni.getSystemInfoSync().platform
+  })
 })
+
 onShow(() => {
-  console.log("App Show")
+  console.log("App Show", { currentLocale: locale.value })
 })
+
 onHide(() => {
   console.log("App Hide")
 })
@@ -31,6 +39,7 @@ onHide(() => {
 .container {
   width: 100%;
   min-height: 100vh;
+  padding: 20rpx;
 }
 
 .lang-switcher {
@@ -38,5 +47,12 @@ onHide(() => {
   top: 20rpx;
   right: 20rpx;
   z-index: 1000;
+}
+
+.debug-info {
+  margin-top: 100rpx;
+  padding: 20rpx;
+  background-color: #f5f5f5;
+  border-radius: 8rpx;
 }
 </style>

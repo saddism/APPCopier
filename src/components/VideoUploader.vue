@@ -284,7 +284,11 @@ uni.onProgressUpdate((res) => {
   -webkit-transform: translateZ(0);
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  -webkit-transform-style: preserve-3d;
+  will-change: transform;
+  z-index: 1;
 }
+</style>
 
 .upload-header {
   display: flex;
@@ -401,11 +405,15 @@ button:active {
   .video-uploader * {
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
+    -webkit-transform-style: preserve-3d;
+    will-change: transform;
   }
 
   .empty-state, .loading-state {
     position: relative;
-    z-index: 1;
+    z-index: 2;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
   }
 
   /* Fix Safari scrolling and rendering issues */
@@ -413,14 +421,18 @@ button:active {
     -webkit-overflow-scrolling: touch;
     overflow-y: auto;
     position: relative;
-    z-index: 1;
+    z-index: 3;
+    -webkit-transform: translate3d(0,0,0);
+    transform: translate3d(0,0,0);
   }
 
   button {
     -webkit-appearance: none;
     -webkit-tap-highlight-color: transparent;
     position: relative;
-    z-index: 2;
+    z-index: 4;
+    transform: translate3d(0,0,0);
+    -webkit-transform: translate3d(0,0,0);
   }
 }
 
