@@ -1,80 +1,99 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  type User
-} from 'firebase/auth'
-import { auth } from '@/config/firebase'
+import { ref, type Ref } from 'vue'
+import { login, register, sendVerificationCode, verifyEmailCode } from '@/api/auth'
 
-// UniApp types are globally available in the runtime
+interface User {
+  email: string;
+  id: string;
+}
+
+interface AuthResult {
+  success: boolean;
+  error?: string;
+  data?: {
+    user: User;
+    token: string;
+  };
+}
+
 export const useUserStore = defineStore('user', () => {
-  const user = ref<User | null>(null)
+  const user: Ref<User | null> = ref(null)
   const isAuthenticated = ref(false)
   const loading = ref(true)
 
-  const login = async (email: string, password: string) => {
+  const loginUser = async (email: string, password: string): Promise<AuthResult> => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password)
-      user.value = userCredential.user
-      isAuthenticated.value = true
-      return { success: true }
+      const result = await login(email, password)
+      if (result.success && result.data) {
+        user.value = result.data.user
+        isAuthenticated.value = true
+        uni.setStorageSync('token', result.data.token)
+        return { success: true }
+      }
+      return { success: false, error: result.error || '登录失败，请重试' }
     } catch (error: any) {
       console.error('Login error:', error)
       return {
         success: false,
-        error: error.code === 'auth/invalid-credential'
-          ? '邮箱或密码错误'
-          : '登录失败，请重试'
+        error: '登录失败，请重试'
       }
     }
   }
 
-  const register = async (email: string, password: string) => {
+  const registerUser = async (email: string, password: string, code: string): Promise<AuthResult> => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
-      user.value = userCredential.user
-      isAuthenticated.value = true
-      return { success: true }
+      const verifyResult = await verifyEmailCode(email, code)
+      if (!verifyResult.success) {
+        return verifyResult
+      }
+
+      const result = await register(email, password, code)
+      if (result.success) {
+        return { success: true }
+      }
+      return { success: false, error: result.error || '注册失败，请重试' }
     } catch (error: any) {
       console.error('Register error:', error)
       return {
         success: false,
-        error: error.code === 'auth/email-already-in-use'
-          ? '该邮箱已被注册'
-          : '注册失败，请重试'
+        error: '注册失败，请重试'
       }
     }
   }
 
-  const logout = async () => {
+  const logoutUser = () => {
+    user.value = null
+    isAuthenticated.value = false
+    uni.removeStorageSync('token')
+  }
+
+  const sendVerification = async (email: string): Promise<AuthResult> => {
     try {
-      await signOut(auth)
-      user.value = null
-      isAuthenticated.value = false
-      uni.removeStorageSync('token')
+      const result = await sendVerificationCode(email)
+      return result
     } catch (error) {
-      console.error('Logout error:', error)
+      console.error('Send verification error:', error)
+      return { success: false, error: '发送验证码失败，请重试' }
     }
   }
 
   const init = () => {
-    onAuthStateChanged(auth, (firebaseUser) => {
-      user.value = firebaseUser
-      isAuthenticated.value = !!firebaseUser
-      loading.value = false
-    })
+    const token = uni.getStorageSync('token')
+    if (token) {
+      isAuthenticated.value = true
+      // TODO: Fetch user profile if needed
+    }
+    loading.value = false
   }
 
   return {
     user,
     isAuthenticated,
     loading,
-    login,
-    register,
-    logout,
+    loginUser,
+    registerUser,
+    logoutUser,
+    sendVerification,
     init
   }
 })
