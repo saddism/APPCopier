@@ -1,11 +1,14 @@
 import { RouterProvider } from '@tanstack/react-router'
 import { router } from '@/lib/router'
 import { HelmetProvider } from 'react-helmet-async'
+import { AuthProvider } from '@/providers/AuthProvider'
 
 function App() {
   return (
     <HelmetProvider>
-      <RouterProvider router={router} />
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
     </HelmetProvider>
   )
 }

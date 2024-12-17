@@ -30,6 +30,35 @@ export const auth = {
   currentUser: null as User | null,
   verificationCodes: new Map<string, string>(),
   passwords: new Map<string, string>(),
+  listeners: new Set<() => void>(),
+
+  // Initialize auth state from localStorage
+  initialize() {
+    const savedUser = localStorage.getItem('currentUser')
+    if (savedUser) {
+      try {
+        this.currentUser = JSON.parse(savedUser)
+        this._notifyListeners()
+      } catch (e) {
+        console.error('Failed to parse saved user:', e)
+        localStorage.removeItem('currentUser')
+      }
+    }
+  },
+
+  // Helper to save state and notify listeners
+  _saveState() {
+    if (this.currentUser) {
+      localStorage.setItem('currentUser', JSON.stringify(this.currentUser))
+    } else {
+      localStorage.removeItem('currentUser')
+    }
+    this._notifyListeners()
+  },
+
+  _notifyListeners() {
+    this.listeners.forEach(listener => listener())
+  },
 
   async signUp(email: string, password: string): Promise<void> {
     // Simulate API call
@@ -58,6 +87,7 @@ export const auth = {
 
     // Log verification code (in production this would be sent via email)
     console.log(`验证码: ${verificationCode} (已发送至 ${email})`);
+    this._saveState();
   },
 
   async signIn(email: string, password: string): Promise<void> {
@@ -78,6 +108,7 @@ export const auth = {
       trialUsed: false,
       isPremium: false
     };
+    this._saveState();
   },
 
   async verifyEmail(code: string): Promise<void> {
@@ -92,12 +123,14 @@ export const auth = {
     await new Promise(resolve => setTimeout(resolve, 1000));
     this.currentUser.emailVerified = true;
     this.verificationCodes.delete(this.currentUser.email);
+    this._saveState();
   },
 
   async signOut(): Promise<void> {
     // Simulate sign out
     await new Promise(resolve => setTimeout(resolve, 1000));
     this.currentUser = null;
+    this._saveState();
   },
 
   async useTrial(): Promise<void> {
@@ -108,5 +141,9 @@ export const auth = {
     // Simulate trial activation
     await new Promise(resolve => setTimeout(resolve, 1000));
     this.currentUser.trialUsed = true;
+    this._saveState();
   }
 };
+
+// Initialize auth state when module loads
+auth.initialize();
