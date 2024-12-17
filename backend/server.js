@@ -6,7 +6,6 @@ const path = require('path');
 const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
-const { createWorker } = require('tesseract.js');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 require('dotenv').config();
 
@@ -100,8 +99,8 @@ const upload = multer({
   limits: { fileSize: 500 * 1024 * 1024 } // 500MB
 });
 
-// Extract frames from video
-async function extractFrames(videoPath, outputDir) {
+// Extract frames from video for app analysis
+async function extractFramesForAnalysis(videoPath, outputDir) {
   return new Promise((resolve, reject) => {
     ffmpeg(videoPath)
       .on('end', () => resolve())
@@ -113,66 +112,6 @@ async function extractFrames(videoPath, outputDir) {
         size: '1280x720'
       });
   });
-}
-
-async function analyzeFrames(framesDir) {
-  const worker = await createWorker('chi_sim');
-  const results = [];
-  const frames = fs.readdirSync(framesDir).filter(file => file.endsWith('.jpg'));
-
-  for (const frame of frames) {
-    const { data: { text } } = await worker.recognize(path.join(framesDir, frame));
-    results.push({ frame, text });
-  }
-
-  await worker.terminate();
-  return results;
-}
-
-// Analyze orders from frames
-async function analyzeOrders(ocrResults) {
-  const orders = [];
-  const orderNumberPattern = /订单号[：:]\s*([A-Z0-9-]+)/;
-  const datePattern = /(\d{4}[-年]\d{1,2}[-月]\d{1,2})/;
-  const amountPattern = /金额[：:]\s*¥?\s*(\d+\.?\d*)/;
-  const statusPattern = /(已取消|正常)/;
-
-  for (const result of ocrResults) {
-    const text = result.text;
-
-    // Extract order information using regex
-    const orderMatch = text.match(orderNumberPattern);
-    const dateMatch = text.match(datePattern);
-    const amountMatch = text.match(amountPattern);
-    const statusMatch = text.match(statusPattern);
-
-    if (orderMatch || dateMatch || amountMatch || statusMatch) {
-      const order = {
-        frame: result.frame,
-        order_number: orderMatch ? orderMatch[1] : null,
-        date: dateMatch ? dateMatch[1].replace(/[年月]/g, '-').replace(/-$/, '') : null,
-        amount: amountMatch ? parseFloat(amountMatch[1]) : null,
-        status: statusMatch ? statusMatch[1] : '正常'
-      };
-
-      if (Object.values(order).some(v => v !== null)) {
-        orders.push(order);
-      }
-    }
-  }
-
-  // Calculate statistics
-  const normalOrders = orders.filter(order => order.status === '正常');
-  const totalAmount = normalOrders.reduce((sum, order) => sum + (order.amount || 0), 0);
-
-  return {
-    total_orders: orders.length,
-    normal_orders: normalOrders.length,
-    cancelled_orders: orders.length - normalOrders.length,
-    total_amount: totalAmount,
-    average_amount: normalOrders.length > 0 ? totalAmount / normalOrders.length : 0,
-    orders: orders
-  };
 }
 
 // Analyze app functionality using Gemini
@@ -263,14 +202,16 @@ app.post('/api/upload', upload.single('video'), async (req, res) => {
 
     console.log('File uploaded successfully:', req.file);
 
-    // Extract frames from video
-    await extractFrames(req.file.path, framesDir);
+    // Extract frames from video for app analysis
+    await extractFramesForAnalysis(req.file.path, framesDir);
 
-    // Analyze frames using OCR
-    const ocrResults = await analyzeFrames(framesDir);
+    // Get frame file paths
+    const frames = fs.readdirSync(framesDir)
+      .filter(f => f.endsWith('.jpg'))
+      .map(f => path.join(framesDir, f));
 
-    // Analyze app functionality using basic analysis
-    const analysis = await analyzeAppFunctionality(ocrResults);
+    // Analyze app functionality using Gemini
+    const analysis = await analyzeAppFunctionality(frames);
 
     res.json({
       message: '视频分析完成',
@@ -286,42 +227,6 @@ app.post('/api/upload', upload.single('video'), async (req, res) => {
     res.status(500).json({ error: '视频处理失败，详细信息: ' + error.message });
   }
 });
-
-// Order analysis endpoint
-app.post('/api/analyze-orders', upload.single('video'), async (req, res) => {
-  console.log('Received order analysis request');
-  try {
-    if (!req.file) {
-      console.log('No file received');
-      return res.status(400).json({ error: '请选择要上传的视频文件' });
-    }
-
-    console.log('File uploaded successfully:', req.file);
-
-    // Extract frames from video
-    await extractFrames(req.file.path, framesDir);
-
-    // Analyze frames using OCR
-    const ocrResults = await analyzeFrames(framesDir);
-
-    // Analyze orders
-    const analysis = await analyzeOrders(ocrResults);
-
-    res.json({
-      message: '订单分析完成',
-      file: {
-        filename: req.file.filename,
-        path: req.file.path,
-        size: req.file.size
-      },
-      analysis
-    });
-  } catch (error) {
-    console.error('Order analysis error:', error.stack || error);
-    res.status(500).json({ error: '订单分析失败，详细信息: ' + error.message });
-  }
-});
-
 // Error handling middleware
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
