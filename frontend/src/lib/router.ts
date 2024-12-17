@@ -10,7 +10,6 @@ import { uploadRoute } from '@/routes/upload'
 import { productListRoute } from '@/routes/products'
 import { productDetailRoute } from '@/routes/products/[id]'
 import { dashboardRoute } from '@/routes/dashboard'
-import { analysisRoute } from '@/routes/analysis'
 
 // SEO-friendly route configuration with language support
 export const routeConfig = {
@@ -25,7 +24,6 @@ export const routeConfig = {
     details: '/products/:slug'
   },
   upload: '/upload',
-  analysis: '/analysis',
   languages: {
     zh: '/zh',
     en: '/en'
@@ -41,7 +39,6 @@ const routeTree = rootRoute.addChildren([
   productListRoute,
   productDetailRoute,
   dashboardRoute,
-  analysisRoute,
 ])
 
 // Configure router with preloading and loading component
