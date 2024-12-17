@@ -41,11 +41,6 @@ export function Layout({ children }: LayoutProps) {
                 </Link>
               </NavigationMenu.Item>
               <NavigationMenu.Item>
-                <Link to="/analysis" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-                  {t('nav.analysis')}
-                </Link>
-              </NavigationMenu.Item>
-              <NavigationMenu.Item>
                 <Link to="/upload" className="text-sm font-medium text-muted-foreground hover:text-foreground">
                   {t('nav.upload')}
                 </Link>

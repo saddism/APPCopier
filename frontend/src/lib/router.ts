@@ -38,7 +38,7 @@ const routeTree = rootRoute.addChildren([
   uploadRoute,
   productListRoute,
   productDetailRoute,
-  dashboardRoute,
+  dashboardRoute
 ])
 
 // Configure router with preloading and loading component
