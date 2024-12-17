@@ -273,67 +273,27 @@ uni.onProgressUpdate((res) => {
 <style>
 .video-uploader {
   padding: 20rpx;
-  min-height: 400rpx; /* Increased minimum height */
+  min-height: 400rpx;
   background-color: #ffffff;
   border-radius: 8rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.1);
-  margin: 20rpx;
   position: relative;
-  overflow: hidden;
-  transform: translateZ(0);
+  /* Safari-specific fixes */
   -webkit-transform: translateZ(0);
-  backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  -webkit-transform-style: preserve-3d;
-  will-change: transform;
-  z-index: 1;
-}
-</style>
-
-.upload-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20rpx;
-  min-height: 120rpx;
+  -webkit-perspective: 1000;
 }
 
-.upload-tip {
-  font-size: 24rpx;
-  color: #909399;
-  margin-top: 20rpx;
-  text-align: center;
+/* Fix for Safari mobile blank page */
+@supports (-webkit-touch-callout: none) {
+  .video-uploader {
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
-.preview {
-  margin-top: 20rpx;
-  padding: 20rpx;
-  border: 1rpx solid #dcdfe6;
-  border-radius: 8rpx;
-  background-color: #ffffff;
-  min-height: 150rpx;
-}
-
-.file-name {
-  font-size: 28rpx;
-  color: #606266;
-  margin-bottom: 20rpx;
-  word-break: break-all;
-}
-
-.action-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 20rpx;
-  margin-top: 20rpx;
-}
-
-.progress {
-  margin: 20rpx 0;
-  background-color: #f5f7fa;
-}
-
-/* Loading state styles */
 .loading-state {
   position: absolute;
   top: 0;
@@ -351,7 +311,6 @@ uni.onProgressUpdate((res) => {
 .loading-text {
   margin-top: 20rpx;
   color: #007AFF;
-  font-size: 28rpx;
 }
 
 .spin {
@@ -363,95 +322,96 @@ uni.onProgressUpdate((res) => {
   to { transform: rotate(360deg); }
 }
 
-/* Touch feedback styles */
-button {
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  -webkit-tap-highlight-color: transparent;
-}
-
-button:active {
-  transform: scale(0.98);
-  opacity: 0.9;
-}
-
-/* Error message styles */
 .error-container {
-  margin: 20rpx;
-  padding: 16rpx;
-  border-radius: 8rpx;
+  margin: 20rpx 0;
+  padding: 20rpx;
   background-color: #fff2f0;
-  border: 1rpx solid #ffccc7;
+  border: 1px solid #ffccc7;
+  border-radius: 8rpx;
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  transform: translateZ(0);
+  gap: 10rpx;
+}
+
+.ios-error {
+  position: sticky;
+  top: 20rpx;
+  z-index: 10;
 }
 
 .error-message {
   color: #ff4d4f;
   font-size: 28rpx;
-  flex: 1;
 }
 
-.ios-error {
-  background-color: #fff7e6;
-  border-color: #ffd591;
-}
-
-/* Safari-specific styles */
-@supports (-webkit-touch-callout: none) {
-  .video-uploader * {
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-    -webkit-transform-style: preserve-3d;
-    will-change: transform;
-  }
-
-  .empty-state, .loading-state {
-    position: relative;
-    z-index: 2;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-  }
-
-  /* Fix Safari scrolling and rendering issues */
-  .preview {
-    -webkit-overflow-scrolling: touch;
-    overflow-y: auto;
-    position: relative;
-    z-index: 3;
-    -webkit-transform: translate3d(0,0,0);
-    transform: translate3d(0,0,0);
-  }
-
-  button {
-    -webkit-appearance: none;
-    -webkit-tap-highlight-color: transparent;
-    position: relative;
-    z-index: 4;
-    transform: translate3d(0,0,0);
-    -webkit-transform: translate3d(0,0,0);
-  }
-}
-
-/* Empty state styles */
 .empty-state {
+  width: 100%;
+  min-height: 300rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40rpx;
-  color: #909399;
-  background-color: #f5f7fa;
+  border: 2rpx dashed #dcdfe6;
   border-radius: 8rpx;
-  min-height: 300rpx;
-  transition: all 0.3s ease;
+  cursor: pointer;
+  /* Safari-specific styling */
+  -webkit-tap-highlight-color: transparent;
 }
 
-.empty-state:active {
-  background-color: #e9ecef;
-  transform: scale(0.98);
+.upload-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20rpx;
+  padding: 40rpx;
+}
+
+.upload-tip {
+  color: #909399;
+  font-size: 28rpx;
+  text-align: center;
+}
+
+.preview {
+  width: 100%;
+  padding: 20rpx;
+  background-color: #f8f9fa;
+  border-radius: 8rpx;
+}
+
+.file-name {
+  font-size: 28rpx;
+  color: #606266;
+  word-break: break-all;
+  margin-bottom: 20rpx;
+}
+
+.progress {
+  margin: 20rpx 0;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 20rpx;
+}
+
+button {
+  flex: 1;
+  font-size: 28rpx;
+  padding: 16rpx 0;
+}
+
+button.loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* iOS-specific button styling */
+@supports (-webkit-touch-callout: none) {
+  button {
+    -webkit-appearance: none;
+    border-radius: 8rpx;
+  }
 }
 </style>
