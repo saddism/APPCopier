@@ -7,6 +7,7 @@ const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 // Set ffmpeg path
@@ -50,7 +51,7 @@ testGeminiAPI();
 
 // Middleware with specific CORS configuration
 app.use(cors({
-  origin: ['https://video-analysis-app-tunnel-dgup6riq.devinapps.com'],
+  origin: ['http://localhost:3000', 'https://video-analysis-app-tunnel-dgup6riq.devinapps.com'],
   credentials: true
 }));
 app.use(bodyParser.json({ limit: '500mb' }));
@@ -112,6 +113,83 @@ const upload = multer({
       cb(new Error('只支持视频文件上传'));
     }
   }
+});
+
+// Initialize email transporter
+const emailTransporter = nodemailer.createTransport({
+  host: 'smtpdm.aliyun.com',
+  port: 465,
+  secure: true,
+  auth: {
+    user: 'appcopier@guixian.cn',
+    pass: 'GuiXian7758'
+  }
+});
+
+// Store verification codes temporarily (in production, use Redis)
+const verificationCodes = new Map();
+
+// Email verification endpoints
+app.post('/api/auth/send-verification', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const code = Math.random().toString().slice(2, 8);
+
+    const mailOptions = {
+      from: 'appcopier@guixian.cn',
+      to: email,
+      subject: '邮箱验证码 - APPCopier',
+      html: `
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+          <h2>APPCopier 邮箱验证</h2>
+          <p>您好！</p>
+          <p>您的验证码是：</p>
+          <div style="background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 24px; font-weight: bold; margin: 20px 0;">
+            ${code}
+          </div>
+          <p>验证码有效期为10分钟，请尽快完成验证。</p>
+          <p>如果您没有请求此验证码，请忽略此邮件。</p>
+          <p>谢谢！</p>
+          <p>APPCopier 团队</p>
+        </div>
+      `
+    };
+
+    await emailTransporter.sendMail(mailOptions);
+
+    // Store code with timestamp
+    verificationCodes.set(email, {
+      code,
+      timestamp: Date.now()
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Failed to send verification email:', error);
+    res.status(500).json({ success: false, error: 'Failed to send verification email' });
+  }
+});
+
+app.post('/api/auth/verify-code', (req, res) => {
+  const { email, code } = req.body;
+  const verification = verificationCodes.get(email);
+
+  if (!verification) {
+    return res.json({ success: false, error: 'No verification code found' });
+  }
+
+  const isExpired = Date.now() - verification.timestamp > 10 * 60 * 1000; // 10 minutes
+  if (isExpired) {
+    verificationCodes.delete(email);
+    return res.json({ success: false, error: 'Verification code expired' });
+  }
+
+  const isValid = verification.code === code;
+  if (isValid) {
+    verificationCodes.delete(email);
+  }
+
+  res.json({ success: isValid, error: isValid ? null : 'Invalid verification code' });
 });
 
 // Extract frames from video for app analysis
@@ -205,73 +283,7 @@ ${context}
     throw new Error('视频分析失败: ' + error.message);
   }
 }
-// Routes
-app.post('/api/upload/chunk', upload.single('chunk'), async (req, res) => {
-  try {
-    const { index, count, filename } = req.body;
 
-    if (!req.file) {
-      return res.status(400).json({ error: '未接收到文件分片' });
-    }
-
-    // 如果是最后一个分片，开始合并
-    if (parseInt(index) === parseInt(count) - 1) {
-      const chunks = [];
-      const chunksDir = path.join(uploadDir, 'chunks');
-      const finalPath = path.join(uploadDir, `${Date.now()}-${filename}`);
-
-      // 收集所有分片
-      for (let i = 0; i < count; i++) {
-        const chunkFiles = fs.readdirSync(chunksDir)
-          .filter(f => f.includes(filename) && f.endsWith(`-${i}`));
-
-        if (chunkFiles.length === 1) {
-          chunks.push(path.join(chunksDir, chunkFiles[0]));
-        }
-      }
-
-      // 如果所有分片都存在，开始合并
-      if (chunks.length === parseInt(count)) {
-        const writeStream = fs.createWriteStream(finalPath);
-
-        for (const chunk of chunks) {
-          const content = fs.readFileSync(chunk);
-          writeStream.write(content);
-          // 删除分片文件
-          fs.unlinkSync(chunk);
-        }
-
-        writeStream.end();
-
-        // 开始视频分析
-        await extractFramesForAnalysis(finalPath, framesDir);
-        const frames = fs.readdirSync(framesDir)
-          .filter(f => f.endsWith('.jpg'))
-          .map(f => path.join(framesDir, f));
-        const analysis = await analyzeAppFunctionality(frames);
-
-        res.json({
-          message: '视频上传和分析完成',
-          file: {
-            filename: path.basename(finalPath),
-            path: finalPath,
-            size: fs.statSync(finalPath).size
-          },
-          analysis
-        });
-      } else {
-        res.json({ message: '分片上传成功，等待其他分片' });
-      }
-    } else {
-      res.json({ message: '分片上传成功' });
-    }
-  } catch (error) {
-    console.error('Chunk upload/analysis error:', error.stack || error);
-    res.status(500).json({ error: '分片处理失败: ' + error.message });
-  }
-});
-
-// 保持原有的完整文件上传路由
 app.post('/api/upload', upload.single('video'), async (req, res) => {
   console.log('Received upload request');
   try {
@@ -307,6 +319,7 @@ app.post('/api/upload', upload.single('video'), async (req, res) => {
     res.status(500).json({ error: '视频处理失败，详细信息: ' + error.message });
   }
 });
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
