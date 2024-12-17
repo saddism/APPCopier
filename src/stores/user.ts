@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, type Ref } from 'vue'
+import { ref } from 'vue'
 import { login, register, sendVerificationCode, verifyEmailCode } from '@/api/auth'
 
 interface User {
@@ -17,7 +17,7 @@ interface AuthResult {
 }
 
 export const useUserStore = defineStore('user', () => {
-  const user: Ref<User | null> = ref(null)
+  const user = ref<User | null>(null)
   const isAuthenticated = ref(false)
   const loading = ref(true)
 
