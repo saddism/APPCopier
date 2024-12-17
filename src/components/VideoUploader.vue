@@ -1,203 +1,445 @@
 <template>
-  <view class="video-uploader">
-    <view class="upload-container">
-      <button class="upload-btn" @click="handleChooseVideo">
-        {{ $t('message.upload.select') }}
-      </button>
-      <text v-if="errorMessage" class="error-message">{{ errorMessage }}</text>
-      <text v-if="uploadProgress" class="status-message">{{ uploadProgress }}</text>
-      <text v-if="successMessage" class="success-message">{{ successMessage }}</text>
+  <view class="video-uploader" :class="{ 'loading': uploading }">
+    <!-- Loading State -->
+    <view v-if="uploading" class="loading-state">
+      <uni-icons type="spinner-cycle" size="32" color="#007AFF" :class="{ 'spin': true }"></uni-icons>
+      <text class="loading-text">{{ t('common.loading') }}</text>
+    </view>
+
+    <!-- Error Message Display -->
+    <view v-if="errorMessage" class="error-container" :class="{ 'ios-error': isIOS }">
+      <uni-icons type="error" size="24" color="#ff4d4f"></uni-icons>
+      <text class="error-message">{{ errorMessage }}</text>
+    </view>
+
+    <!-- #ifdef H5 -->
+    <view v-if="!currentFile" class="empty-state">
+      <uni-file-picker
+        v-model="fileList"
+        fileMediatype="video"
+        :auto-upload="false"
+        @select="handleSelect"
+        @delete="handleDelete"
+        :title="t('upload.tip')"
+      >
+        <template #default>
+          <view class="upload-header">
+            <uni-icons type="camera-filled" size="48" color="#909399"></uni-icons>
+            <text class="upload-tip">{{ t('upload.tip') }}</text>
+          </view>
+        </template>
+      </uni-file-picker>
+    </view>
+    <!-- #endif -->
+
+    <!-- #ifdef APP-PLUS -->
+    <view v-if="!currentFile" class="empty-state" @click="handleSelect">
+      <view class="upload-header">
+        <uni-icons type="camera-filled" size="48" color="#909399"></uni-icons>
+        <text class="upload-tip">{{ t('upload.tip') }}</text>
+      </view>
+    </view>
+    <!-- #endif -->
+
+    <view class="preview" v-if="currentFile">
+      <text class="file-name">{{ currentFile.name }}</text>
+      <view class="progress" v-if="uploading">
+        <uni-progress :percent="uploadProgress" :showText="true"></uni-progress>
+      </view>
+      <view class="action-buttons">
+        <button
+          type="primary"
+          @click="handleUpload"
+          :disabled="uploading"
+          :class="{ 'loading': uploading }"
+        >
+          {{ uploading ? t('upload.uploading') : t('upload.start') }}
+        </button>
+        <button
+          type="warn"
+          @click="cancelUpload"
+          :disabled="uploading"
+        >
+          {{ t('upload.cancel') }}
+        </button>
+      </view>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useUserStore } from '@/stores/user'
 
 const { t } = useI18n()
-const errorMessage = ref('')
-const successMessage = ref('')
-const uploadProgress = ref('')
+const userStore = useUserStore()
 
-const CHUNK_SIZE = 1024 * 1024 * 2 // 2MB chunks
+// Constants
 const MAX_FILE_SIZE = 500 * 1024 * 1024 // 500MB
+const IOS_MAX_SIZE = 300 * 1024 * 1024 // 300MB for iOS (more conservative)
 
-interface ChunkInfo {
-  chunk: string  // 使用临时文件路径
-  index: number
-  count: number
-  filename: string
+// State
+const fileList = ref<any[]>([])
+const currentFile = ref<any>(null)
+const uploading = ref(false)
+const uploadProgress = ref(0)
+const errorMessage = ref('')
+const isSafari = ref(false)
+const isIOS = ref(false)
+
+// Platform detection
+onMounted(() => {
+  const systemInfo = uni.getSystemInfoSync()
+  isIOS.value = systemInfo.platform === 'ios'
+  // #ifdef H5
+  const ua = navigator.userAgent.toLowerCase()
+  isSafari.value = /safari/.test(ua) && !/chrome/.test(ua)
+  // #endif
+})
+
+const showError = (key: string, platformSpecific = true) => {
+  errorMessage.value = platformSpecific && (isIOS.value || isSafari.value)
+    ? t(`upload.error.ios.${key}`)
+    : t(`upload.error.${key}`)
 }
 
-const uploadChunk = async (chunk: ChunkInfo) => {
+const validateFile = (file: any) => {
+  const maxSize = isIOS.value ? IOS_MAX_SIZE : MAX_FILE_SIZE
+  let isValidType = false
+  let fileSize = 0
+  let fileFormat = ''
+
+  // Platform-specific validation
+  // #ifdef H5
+  isValidType = file.type?.startsWith('video/')
+  fileSize = file.size
+  fileFormat = file.name?.split('.').pop()?.toLowerCase() || ''
+
+  // Safari-specific validation
+  if (isSafari.value) {
+    if (!['mp4', 'mov'].includes(fileFormat)) {
+      showError('format', true)
+      return false
+    }
+  }
+  // #endif
+
+  // #ifdef APP-PLUS
+  isValidType = !!file.tempFilePath && file.size > 0
+  fileSize = file.size
+  fileFormat = file.tempFilePath?.split('.').pop()?.toLowerCase() || ''
+
+  // iOS-specific validation
+  if (isIOS.value && !['mp4', 'mov'].includes(fileFormat)) {
+    showError('format', true)
+    return false
+  }
+  // #endif
+
+  if (!isValidType) {
+    showError('invalidType', true)
+    return false
+  }
+
+  if (fileSize > maxSize) {
+    showError(isIOS.value ? 'iosSizeLimit' : 'tooLarge', true)
+    return false
+  }
+
+  return true
+}
+
+const handleUpload = async () => {
+  if (!currentFile.value || uploading.value) return
+
   try {
-    const formData = {
-      'index': chunk.index.toString(),
-      'count': chunk.count.toString(),
-      'filename': chunk.filename
-    }
+    uploading.value = true
+    uploadProgress.value = 0
+    errorMessage.value = ''
 
-    const [error, response] = await uni.uploadFile({
-      url: 'https://video-analysis-app-tunnel-dgup6riq.devinapps.com/api/upload/chunk',
-      filePath: chunk.chunk,
-      name: 'chunk',
-      formData: formData,
-      header: {
-        'content-type': 'multipart/form-data',
-        'Authorization': 'Basic ' + uni.base64Encode('devin:8d55f0c17d37edef9d44c20307bbfbfb')
+    // Chunk size: 2MB for iOS/Safari, 5MB for others
+    const chunkSize = (isIOS.value || isSafari.value) ? 2 * 1024 * 1024 : 5 * 1024 * 1024
+    const file = currentFile.value.file || currentFile.value
+    const chunks = Math.ceil(file.size / chunkSize)
+
+    for (let i = 0; i < chunks; i++) {
+      const start = i * chunkSize
+      const end = Math.min(start + chunkSize, file.size)
+      const chunk = file.slice(start, end)
+
+      const formData = new FormData()
+      formData.append('chunk', chunk)
+      formData.append('index', i.toString())
+      formData.append('total', chunks.toString())
+      formData.append('filename', file.name)
+
+      const response = await uni.request({
+        url: 'https://video-analysis-app-tunnel-dgup6riq.devinapps.com/api/upload/chunk',
+        method: 'POST',
+        data: formData,
+        header: {
+          'content-type': 'multipart/form-data',
+          'Authorization': 'Basic ' + uni.base64Encode('devin:8d55f0c17d37edef9d44c20307bbfbfb')
+        }
+      })
+
+      if (response.statusCode !== 200) {
+        throw new Error('Chunk upload failed')
       }
-    });
 
-    if (error) {
-      console.error('Upload error:', error);
-      return false;
+      uploadProgress.value = Math.round(((i + 1) / chunks) * 100)
     }
 
-    if (response.statusCode === 200) {
-      const progress = Math.round(((chunk.index + 1) / chunk.count) * 100)
-      uploadProgress.value = `${t('message.upload.uploading')} ${progress}%`
-      return true
-    }
-    return false
+    handleDelete()
+    uni.showToast({
+      title: t('upload.success'),
+      icon: 'success'
+    })
   } catch (error) {
-    console.error('Chunk upload error:', error)
-    return false
+    console.error('Upload error:', error)
+    showError(isIOS.value ? 'uploadFailed' : 'uploadFailed', true)
+  } finally {
+    uploading.value = false
+    uploadProgress.value = 0
   }
 }
 
-const handleChooseVideo = async () => {
+const handleSelect = async (e?: any) => {
   try {
+    let file
+    // #ifdef H5
+    if (e?.tempFiles?.length) {
+      file = e.tempFiles[0]
+
+      // Show Safari warning before proceeding
+      if (isSafari.value) {
+        showError('safari', true)
+      }
+    }
+    // #endif
+
+    // #ifdef APP-PLUS
     const result = await uni.chooseVideo({
       count: 1,
       sourceType: ['album', 'camera'],
+      compressed: isIOS.value, // Enable compression for iOS
       maxDuration: 600,
     })
-
-    if (!result) {
-      errorMessage.value = t('message.upload.error')
-      return
-    }
-
-    // 验证文件类型
-    const fileType = result.tempFilePath.split('.').pop()?.toLowerCase()
-    const validTypes = ['mp4', 'mov', 'avi']
-    if (!validTypes.includes(fileType || '')) {
-      errorMessage.value = t('message.upload.invalidType')
-      return
-    }
-
-    const fileSize = result.size
-    if (fileSize > MAX_FILE_SIZE) {
-      errorMessage.value = t('message.upload.maxSize')
-      return
-    }
-
-    uploadProgress.value = t('message.upload.uploading')
-    errorMessage.value = ''
-    successMessage.value = ''
-
-    // 读取文件并分片
-    const tempFilePath = result.tempFilePath
-    const chunks: ChunkInfo[] = []
-    const chunkCount = Math.ceil(fileSize / CHUNK_SIZE)
-    const filename = tempFilePath.split('/').pop() || 'video.mp4'
-
-    // 使用FileSystemManager读取文件并创建分片
-    const fs = uni.getFileSystemManager()
-    const buffer = fs.readFileSync(tempFilePath)
-
-    // 创建分片
-    for (let i = 0; i < chunkCount; i++) {
-      const start = i * CHUNK_SIZE
-      const end = Math.min(start + CHUNK_SIZE, fileSize)
-      const chunkBuffer = buffer.slice(start, end)
-
-      // 将分片写入临时文件
-      const tempChunkPath = `${uni.env.USER_DATA_PATH}/chunk_${i}.tmp`
-      fs.writeFileSync(tempChunkPath, chunkBuffer)
-
-      chunks.push({
-        chunk: tempChunkPath,
-        index: i,
-        count: chunkCount,
-        filename
-      })
-    }
-
-    // 上传分片
-    let uploadedChunks = 0
-    for (const chunk of chunks) {
-      const success = await uploadChunk(chunk)
-      if (!success) {
-        errorMessage.value = t('message.upload.error')
-        uploadProgress.value = ''
-        // 清理临时文件
-        chunks.forEach(c => {
-          try {
-            fs.unlinkSync(c.chunk)
-          } catch (error) {
-            console.error('Clean up error:', error)
-          }
-        })
-        return
+    if (result) {
+      file = {
+        ...result,
+        name: result.tempFilePath.split('/').pop(),
+        type: 'video/mp4'
       }
-      uploadedChunks++
-      const progress = Math.round((uploadedChunks / chunkCount) * 100)
-      uploadProgress.value = `${t('message.upload.uploading')} ${progress}%`
     }
+    // #endif
 
-    // 清理临时文件
-    chunks.forEach(chunk => {
-      try {
-        fs.unlinkSync(chunk.chunk)
-      } catch (error) {
-        console.error('Clean up error:', error)
-      }
-    })
-
-    successMessage.value = t('message.upload.success')
-    uploadProgress.value = ''
+    if (file && validateFile(file)) {
+      currentFile.value = file
+      errorMessage.value = ''
+    }
   } catch (error) {
-    console.error('Video upload error:', error)
-    errorMessage.value = t('message.upload.error')
-    uploadProgress.value = ''
+    console.error('Video selection error:', error)
+    const errorKey = isIOS.value ? 'ios.selection' :
+                    isSafari.value ? 'safari' : 'uploadFailed'
+    showError(errorKey, true)
   }
 }
+
+const handleDelete = () => {
+  currentFile.value = null
+  fileList.value = []
+  errorMessage.value = ''
+  uploadProgress.value = 0
+}
+
+const cancelUpload = () => {
+  // TODO: Implement upload cancellation
+  uploading.value = false
+  uploadProgress.value = 0
+  errorMessage.value = ''
+}
+
+// Upload progress tracking
+uni.onProgressUpdate((res) => {
+  if (res.progress > 0) {
+    uploadProgress.value = res.progress
+    errorMessage.value = '' // Clear error when upload progresses
+  }
+})
 </script>
 
 <style>
 .video-uploader {
-  padding: 20px;
+  padding: 20rpx;
+  min-height: 400rpx; /* Increased minimum height */
+  background-color: #ffffff;
+  border-radius: 8rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.1);
+  margin: 20rpx;
+  position: relative;
+  overflow: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
-.upload-container {
+.upload-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20rpx;
+  padding: 20rpx;
+  min-height: 120rpx;
 }
 
-.upload-btn {
-  background-color: #007AFF;
-  color: #ffffff;
-  padding: 20rpx 40rpx;
-  border-radius: 10rpx;
-  border: none;
+.upload-tip {
+  font-size: 24rpx;
+  color: #909399;
+  margin-top: 20rpx;
+  text-align: center;
+}
+
+.preview {
+  margin-top: 20rpx;
+  padding: 20rpx;
+  border: 1rpx solid #dcdfe6;
+  border-radius: 8rpx;
+  background-color: #ffffff;
+  min-height: 150rpx;
+}
+
+.file-name {
+  font-size: 28rpx;
+  color: #606266;
+  margin-bottom: 20rpx;
+  word-break: break-all;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20rpx;
+  margin-top: 20rpx;
+}
+
+.progress {
+  margin: 20rpx 0;
+  background-color: #f5f7fa;
+}
+
+/* Loading state styles */
+.loading-state {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.9);
+  z-index: 100;
+}
+
+.loading-text {
+  margin-top: 20rpx;
+  color: #007AFF;
+  font-size: 28rpx;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Touch feedback styles */
+button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+/* Error message styles */
+.error-container {
+  margin: 20rpx;
+  padding: 16rpx;
+  border-radius: 8rpx;
+  background-color: #fff2f0;
+  border: 1rpx solid #ffccc7;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  transform: translateZ(0);
 }
 
 .error-message {
-  color: #ff0000;
+  color: #ff4d4f;
   font-size: 28rpx;
+  flex: 1;
 }
 
-.success-message {
-  color: #00aa00;
-  font-size: 28rpx;
+.ios-error {
+  background-color: #fff7e6;
+  border-color: #ffd591;
 }
 
-.status-message {
-  color: #666666;
-  font-size: 28rpx;
+/* Safari-specific styles */
+@supports (-webkit-touch-callout: none) {
+  .video-uploader * {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+
+  .empty-state, .loading-state {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Fix Safari scrolling and rendering issues */
+  .preview {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  button {
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    z-index: 2;
+  }
+}
+
+/* Empty state styles */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40rpx;
+  color: #909399;
+  background-color: #f5f7fa;
+  border-radius: 8rpx;
+  min-height: 300rpx;
+  transition: all 0.3s ease;
+}
+
+.empty-state:active {
+  background-color: #e9ecef;
+  transform: scale(0.98);
 }
 </style>

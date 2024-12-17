@@ -4,11 +4,24 @@ export default {
     upload: {
       title: '视频上传',
       select: '选择视频',
-      maxSize: '文件大小不能超过500MB',
-      invalidType: '请选择视频文件',
+      tip: '点击选择视频',
+      error: {
+        tooLarge: '文件大小不能超过500MB',
+        invalidType: '请选择视频文件',
+        uploadFailed: '上传失败，请重试',
+        ios: {
+          tooLarge: 'iOS设备上传文件不能超过300MB',
+          iosSizeLimit: 'iOS设备上传限制为300MB',
+          uploadFailed: 'iOS设备上传失败，请尝试使用更小的文件或其他设备',
+          selection: 'iOS设备选择视频失败，请重试',
+          format: '此视频格式在iOS上不受支持，请使用MP4格式',
+          safari: 'Safari浏览器对视频上传支持有限，请尝试使用其他浏览器'
+        }
+      },
       uploading: '上传中...',
       success: '上传成功',
-      error: '上传失败'
+      start: '开始上传',
+      cancel: '取消上传'
     },
     auth: {
       login: '登录',

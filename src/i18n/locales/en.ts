@@ -4,11 +4,24 @@ export default {
     upload: {
       title: 'Video Upload',
       select: 'Select Video',
-      maxSize: 'File size cannot exceed 500MB',
-      invalidType: 'Please select a video file',
+      tip: 'Click or tap to select a video',
+      error: {
+        tooLarge: 'File size cannot exceed 500MB',
+        invalidType: 'Please select a video file',
+        uploadFailed: 'Upload failed, please try again',
+        ios: {
+          tooLarge: 'File size cannot exceed 300MB on iOS devices',
+          iosSizeLimit: 'iOS devices have a 300MB upload limit',
+          uploadFailed: 'Upload failed on iOS. Please try using a smaller file or a different device',
+          selection: 'Video selection failed on iOS. Please try again',
+          format: 'This video format is not supported on iOS. Please try MP4 format',
+          safari: 'Safari has limited video upload support. Try using a different browser'
+        }
+      },
       uploading: 'Uploading...',
       success: 'Upload successful',
-      error: 'Upload failed'
+      start: 'Start Upload',
+      cancel: 'Cancel Upload'
     },
     auth: {
       login: 'Login',
