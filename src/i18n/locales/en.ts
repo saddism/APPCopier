@@ -57,6 +57,7 @@ export default {
       forgotPassword: 'Forgot Password',
       noAccount: 'No account? Register',
       hasAccount: 'Have an account? Login',
+      loginRequired: 'Please login to access this feature',
       errors: {
         'auth/invalid-email': 'Invalid email address',
         'auth/user-disabled': 'This account has been disabled',

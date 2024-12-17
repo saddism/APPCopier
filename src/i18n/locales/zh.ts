@@ -57,6 +57,7 @@ export default {
       forgotPassword: '忘记密码',
       noAccount: '没有账号？注册',
       hasAccount: '已有账号？登录',
+      loginRequired: '请登录后使用此功能',
       errors: {
         'auth/invalid-email': '无效的邮箱地址',
         'auth/user-disabled': '该账号已被禁用',

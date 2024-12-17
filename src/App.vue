@@ -1,6 +1,17 @@
 <template>
   <view class="container">
-    <LanguageSwitcher class="lang-switcher" />
+    <view class="header">
+      <LanguageSwitcher class="lang-switcher" />
+      <view v-if="!userStore.loading" class="auth-buttons">
+        <template v-if="userStore.isAuthenticated">
+          <button class="auth-btn" @click="handleLogout">{{ $t('auth.logout') }}</button>
+        </template>
+        <template v-else>
+          <button class="auth-btn" @click="goToLogin">{{ $t('auth.login') }}</button>
+          <button class="auth-btn" @click="goToRegister">{{ $t('auth.register') }}</button>
+        </template>
+      </view>
+    </view>
     <slot></slot>
   </view>
 </template>
@@ -9,19 +20,31 @@
 import { onLaunch, onShow, onHide } from "@dcloudio/uni-app"
 import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import { useI18n } from 'vue-i18n'
+import { useUserStore } from '@/stores/user'
 
 const { locale } = useI18n()
+const userStore = useUserStore()
 
 onLaunch(() => {
   const savedLanguage = uni.getStorageSync('language')
   if (savedLanguage) {
     locale.value = savedLanguage
   }
-  console.log("App Launch", {
-    currentLocale: locale.value,
-    platform: uni.getSystemInfoSync().platform
-  })
+  userStore.init()
 })
+
+const handleLogout = async () => {
+  await userStore.logout()
+  uni.reLaunch({ url: '/pages/index/index' })
+}
+
+const goToLogin = () => {
+  uni.navigateTo({ url: '/pages/auth/login' })
+}
+
+const goToRegister = () => {
+  uni.navigateTo({ url: '/pages/auth/register' })
+}
 
 onShow(() => {
   console.log("App Show", { currentLocale: locale.value })
@@ -39,10 +62,28 @@ onHide(() => {
   padding: 20rpx;
 }
 
+.header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 30rpx;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 10rpx;
+}
+
+.auth-btn {
+  padding: 10rpx 20rpx;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  background-color: #4a90e2;
+  color: white;
+}
+
 .lang-switcher {
-  position: fixed;
-  top: 20rpx;
-  right: 20rpx;
-  z-index: 1000;
+  margin-right: auto;
 }
 </style>
