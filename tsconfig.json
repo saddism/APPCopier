@@ -7,7 +7,7 @@
       "@/*": ["./src/*"]
     },
     "lib": ["esnext", "dom"],
-    "types": ["@dcloudio/types", "node"],
+    "types": ["@dcloudio/types", "node", "@vue/runtime-core"],
     "allowJs": true,
     "strict": true,
     "module": "esnext",

@@ -56,9 +56,15 @@ onHide(() => {
 </script>
 
 <style>
+/* Common styles */
 .container {
   width: 100%;
   min-height: 100vh;
+}
+
+/* Mobile styles */
+/* #ifndef H5 */
+.container {
   padding: 20rpx;
 }
 
@@ -82,6 +88,43 @@ onHide(() => {
   background-color: #4a90e2;
   color: white;
 }
+/* #endif */
+
+/* Web styles */
+/* #ifdef H5 */
+.container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.auth-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #4a90e2;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.auth-btn:hover {
+  background-color: #357abd;
+}
+/* #endif */
 
 .lang-switcher {
   margin-right: auto;

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from '@vue/composition-api'
+import { ref } from 'vue'
 import { login, register, sendVerificationCode } from '@/api/auth'
 import { verifyEmailCode } from '@/api/email'
 
