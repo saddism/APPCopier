@@ -98,8 +98,8 @@
             "assetsPublicPath": "/",
             "assetsSubDirectory": "static"
         },
-        "appMode": "web",
+        "appMode": "browser",
         "usingComponents": false,
-        "renderMode": "webview"
+        "renderingMode": "browser"
     }
 }

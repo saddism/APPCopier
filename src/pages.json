@@ -1,86 +1,95 @@
 {
-	"pages": [
-		{
-			"path": "pages/index/index",
-			"style": {
-				"navigationBarTitleText": "%nav.home%"
-			}
-		},
-		{
-			"path": "pages/upload/index",
-			"style": {
-				"navigationBarTitleText": "%nav.upload%"
-			}
-		},
-		{
-			"path": "pages/auth/login",
-			"style": {
-				"navigationBarTitleText": "%nav.login%"
-			}
-		},
-		{
-			"path": "pages/dashboard/index",
-			"style": {
-				"navigationBarTitleText": "%nav.dashboard%"
-			}
-		},
-		{
-			"path": "pages/products/index",
-			"style": {
-				"navigationBarTitleText": "%nav.products%"
-			}
-		},
-		{
-			"path": "pages/products/detail",
-			"style": {
-				"navigationBarTitleText": "%nav.productDetail%"
-			}
-		}
-	],
-	"globalStyle": {
-		"navigationBarTextStyle": "black",
-		"navigationBarTitleText": "APPCopier",
-		"navigationBarBackgroundColor": "#F8F8F8",
-		"backgroundColor": "#F8F8F8",
-		"h5": {
-			"titleNView": false,
-			"navigationBarTextStyle": "black",
-			"navigationStyle": "custom",
-			"navigationBar": false,
-			"renderingMode": "webview"
-		}
-	},
-	"tabBar": {
-		"condition": {
-			"platform": ["android", "ios"]
-		},
-		"color": "#7A7E83",
-		"selectedColor": "#3cc51f",
-		"borderStyle": "black",
-		"backgroundColor": "#ffffff",
-		"list": [
-			{
-				"pagePath": "pages/index/index",
-				"text": "首页"
-			},
-			{
-				"pagePath": "pages/upload/index",
-				"text": "上传"
-			},
-			{
-				"pagePath": "pages/products/index",
-				"text": "产品"
-			},
-			{
-				"pagePath": "pages/dashboard/index",
-				"text": "仪表板"
-			}
-		]
-	},
-	"easycom": {
-		"autoscan": true,
-		"custom": {
-			"^uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue"
-		}
-	}
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "首页"
+      }
+    },
+    {
+      "path": "pages/upload/index",
+      "style": {
+        "navigationBarTitleText": "视频上传"
+      }
+    },
+    {
+      "path": "pages/auth/login",
+      "style": {
+        "navigationBarTitleText": "登录"
+      }
+    },
+    {
+      "path": "pages/dashboard/index",
+      "style": {
+        "navigationBarTitleText": "控制台"
+      }
+    },
+    {
+      "path": "pages/products/index",
+      "style": {
+        "navigationBarTitleText": "产品"
+      }
+    },
+    {
+      "path": "pages/products/detail",
+      "style": {
+        "navigationBarTitleText": "产品详情"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "APPCopier",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8",
+    "h5": {
+      "titleNView": false,
+      "navigationBarTextStyle": "black",
+      "navigationStyle": "custom",
+      "navigationBar": false,
+      "renderingMode": "browser",
+      "usingComponents": false
+    }
+  },
+  "tabBar": {
+    "condition": {
+      "exclude": ["H5"]
+    },
+    "color": "#7A7E83",
+    "selectedColor": "#007AFF",
+    "borderStyle": "black",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "static/images/home.png",
+        "selectedIconPath": "static/images/home-active.png"
+      },
+      {
+        "pagePath": "pages/upload/index",
+        "text": "视频上传",
+        "iconPath": "static/images/upload.png",
+        "selectedIconPath": "static/images/upload-active.png"
+      },
+      {
+        "pagePath": "pages/products/index",
+        "text": "产品",
+        "iconPath": "static/images/products.png",
+        "selectedIconPath": "static/images/products-active.png"
+      },
+      {
+        "pagePath": "pages/dashboard/index",
+        "text": "控制台",
+        "iconPath": "static/images/dashboard.png",
+        "selectedIconPath": "static/images/dashboard-active.png"
+      }
+    ]
+  },
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue"
+    }
+  }
 }
