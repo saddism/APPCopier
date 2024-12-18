@@ -1,8 +1,7 @@
 <template>
-  <!-- Web-only layout -->
-  <!-- #ifdef H5 -->
-  <view class="layout web-layout">
-    <view class="header">
+  <view class="layout" :class="{ 'web-layout': isH5Platform, 'mobile-layout': !isH5Platform }">
+    <!-- Web/H5 Header -->
+    <view v-if="isH5Platform" class="header">
       <view class="header-content">
         <text class="title">{{ t('nav.appTitle') }}</text>
         <view class="auth-section" v-if="!userStore.isAuthenticated">
@@ -17,7 +16,8 @@
       <LanguageSwitcher />
     </view>
 
-    <view class="web-nav">
+    <!-- Web/H5 Navigation -->
+    <view v-if="isH5Platform" class="web-nav">
       <view class="nav-links">
         <text class="nav-link" @click="navigateTo('/pages/index/index')">{{ t('nav.home') }}</text>
         <text class="nav-link" @click="navigateTo('/pages/products/index')">{{ t('nav.products') }}</text>
@@ -26,16 +26,8 @@
       </view>
     </view>
 
-    <view class="main-content">
-      <slot></slot>
-    </view>
-  </view>
-  <!-- #endif -->
-
-  <!-- Mobile-only layout -->
-  <!-- #ifndef H5 -->
-  <view class="layout mobile-layout">
-    <view class="header">
+    <!-- Mobile Header -->
+    <view v-if="!isH5Platform" class="header">
       <view class="header-content">
         <text class="title">{{ t('nav.appTitle') }}</text>
         <view class="auth-section" v-if="!userStore.isAuthenticated">
@@ -50,11 +42,13 @@
       <LanguageSwitcher />
     </view>
 
+    <!-- Common Content Area -->
     <view class="main-content">
       <slot></slot>
     </view>
 
-    <view class="footer">
+    <!-- Mobile Navigation Footer -->
+    <view v-if="!isH5Platform" class="footer">
       <view class="nav-item" @click="navigateTo('/pages/index/index')">
         <text>{{ t('nav.home') }}</text>
       </view>
@@ -69,27 +63,65 @@
       </view>
     </view>
   </view>
-  <!-- #endif -->
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUserStore } from '../stores/user'
 import LanguageSwitcher from './LanguageSwitcher.vue'
 
 const { t } = useI18n()
 const userStore = useUserStore()
+const isH5Platform = ref(false)
+
+onMounted(() => {
+  try {
+    const systemInfo = uni.getSystemInfoSync()
+    const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined'
+    isH5Platform.value = isBrowser
+
+    console.log('Layout Platform Detection:', {
+      rawPlatform: systemInfo?.platform,
+      isBrowser,
+      isH5: isH5Platform.value,
+      userAgent: window?.navigator?.userAgent
+    })
+
+    // Force H5 styles if in browser
+    if (isBrowser && document) {
+      document.documentElement.classList.add('h5-mode')
+    }
+  } catch (error) {
+    console.error('Platform detection error:', error)
+    isH5Platform.value = typeof window !== 'undefined'
+  }
+})
 
 const navigateTo = (url: string) => {
-  uni.navigateTo({ url })
+  if (isH5Platform.value) {
+    // Remove '/pages' prefix for H5 navigation
+    const h5Path = url.replace('/pages', '')
+    window.location.href = h5Path
+  } else {
+    uni.navigateTo({ url })
+  }
 }
 
 const navigateToLogin = () => {
-  uni.navigateTo({ url: '/pages/auth/login' })
+  if (isH5Platform.value) {
+    window.location.href = '/auth/login'
+  } else {
+    uni.navigateTo({ url: '/pages/auth/login' })
+  }
 }
 
 const navigateToRegister = () => {
-  uni.navigateTo({ url: '/pages/auth/register' })
+  if (isH5Platform.value) {
+    window.location.href = '/auth/register'
+  } else {
+    uni.navigateTo({ url: '/pages/auth/register' })
+  }
 }
 
 const handleLogout = async () => {
@@ -98,7 +130,11 @@ const handleLogout = async () => {
     title: t('auth.logoutSuccess'),
     icon: 'success'
   })
-  uni.reLaunch({ url: '/pages/index/index' })
+  if (isH5Platform.value) {
+    window.location.href = '/'
+  } else {
+    uni.reLaunch({ url: '/pages/index/index' })
+  }
 }
 </script>
 
@@ -108,51 +144,16 @@ const handleLogout = async () => {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  width: 100%;
 }
-
-/* Mobile styles */
-/* #ifndef H5 */
-.header {
-  padding: 20rpx;
-  background-color: #ffffff;
-  border-bottom: 1rpx solid #eaeaea;
-}
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10rpx;
-}
-
-.title {
-  font-size: 32rpx;
-  font-weight: bold;
-}
-
-.main-content {
-  flex: 1;
-  padding: 20rpx;
-}
-
-.footer {
-  display: flex;
-  justify-content: space-around;
-  padding: 20rpx;
-  background-color: #ffffff;
-  border-top: 1rpx solid #eaeaea;
-}
-
-.nav-item {
-  padding: 10rpx;
-  text-align: center;
-}
-/* #endif */
 
 /* Web styles */
-/* #ifdef H5 */
-.header {
-  padding: 20px;
+.web-layout {
+  background-color: #f8f8f8;
+}
+
+.web-layout .header {
+  padding: 1rem;
   background-color: #ffffff;
   border-bottom: 1px solid #eaeaea;
   position: fixed;
@@ -163,74 +164,45 @@ const handleLogout = async () => {
 }
 
 .header-content {
-  max-width: 1200px;
-  margin: 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.title {
-  font-size: 24px;
-  font-weight: bold;
-}
-
-.main-content {
   max-width: 1200px;
-  margin: 80px auto 0;
-  padding: 20px;
-  flex: 1;
+  margin: 0 auto;
+  padding: 0 1rem;
 }
 
 .web-nav {
+  margin-top: 4rem;
+  padding: 1rem;
   background-color: #ffffff;
-  padding: 15px 0;
   border-bottom: 1px solid #eaeaea;
-  position: fixed;
-  top: 70px;
-  left: 0;
-  right: 0;
-  z-index: 99;
 }
 
 .nav-links {
-  max-width: 1200px;
-  margin: 0 auto;
   display: flex;
-  gap: 30px;
-  padding: 0 20px;
+  gap: 2rem;
+  justify-content: center;
 }
 
 .nav-link {
-  color: #333;
   cursor: pointer;
-  font-size: 16px;
-  transition: color 0.2s;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
 }
 
 .nav-link:hover {
-  color: #007aff;
+  background-color: #f0f0f0;
 }
 
-button {
-  padding: 8px 16px;
-  border-radius: 4px;
-  background-color: #007aff;
-  color: #ffffff;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  border: none;
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  margin-top: 6rem;
 }
 
-button:hover {
-  background-color: #0056b3;
+/* Mobile styles */
+.mobile-layout {
+  /* PLACEHOLDER: Mobile layout styles */
 }
-
-.auth-section,
-.user-section {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-}
-/* #endif */
 </style>

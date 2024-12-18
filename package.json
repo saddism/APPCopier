@@ -52,13 +52,14 @@
     "@dcloudio/uni-ui": "^1.5.7",
     "@intlify/message-compiler": "9.2.2",
     "@intlify/shared": "9.2.2",
+    "@vue/runtime-core": "^3.4.21",
+    "@vue/runtime-dom": "^3.4.21",
     "nodemailer": "^6.9.16",
     "pinia": "^2.3.0",
     "sass": "^1.83.0",
     "vue": "^3.4.21",
     "vue-i18n": "^9.2.2",
-    "@vue/runtime-core": "^3.4.21",
-    "@vue/runtime-dom": "^3.4.21"
+    "vue-router": "4"
   },
   "devDependencies": {
     "@dcloudio/types": "^3.4.14",

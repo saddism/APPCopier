@@ -26,14 +26,20 @@ export default defineConfig({
     cssCodeSplit: true
   },
   server: {
-    port: 3000,
+    port: 8080,
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'http://localhost:8000', // Update to correct backend port
+        target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false
       }
+    }
+  },
+  // Add H5-specific configuration
+  h5: {
+    devServer: {
+      port: 8080
     }
   }
 });

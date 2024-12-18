@@ -1,8 +1,10 @@
 <template>
-  <view :class="{ 'h5-mode': isH5Platform || isWebPlatform }">
-    <Layout>
-      <slot></slot>
-    </Layout>
+  <view class="app-container" :class="{ 'h5-mode': isH5Platform || isWebPlatform }">
+    <router-view v-slot="{ Component }">
+      <Layout>
+        <component :is="Component" />
+      </Layout>
+    </router-view>
   </view>
 </template>
 
@@ -86,12 +88,20 @@ page {
   background-color: #f8f8f8;
 }
 
+.app-container {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .h5-mode {
   min-height: 100vh !important;
   display: flex !important;
   flex-direction: column !important;
   position: relative !important;
   overflow-x: hidden !important;
+  background-color: #f8f8f8 !important;
 }
 
 /* Hide tabBar in H5 mode - Enhanced specificity */
@@ -123,5 +133,12 @@ page {
   height: 100vh !important;
   min-height: 100vh !important;
   position: relative !important;
+}
+
+/* Force content visibility */
+.h5-mode :deep(.uni-page-body) {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 100vh !important;
 }
 </style>

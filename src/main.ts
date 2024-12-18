@@ -3,6 +3,7 @@ import { createPinia } from 'pinia';
 import App from "./App.vue";
 import i18n from './i18n';
 import './utils/navigation';
+import router from './router';
 
 declare const uni: any;
 
@@ -50,6 +51,9 @@ export function createApp() {
   i18n.global.fallbackWarn = false;
   i18n.global.missingWarn = false;
 
+  app.use(pinia);
+  app.use(i18n);
+
   // Set platform-specific configurations
   if (isH5 || isWeb) {
     console.log('Initializing H5/Web mode');
@@ -60,10 +64,8 @@ export function createApp() {
     }
     app.config.globalProperties.isH5 = true;
     app.config.globalProperties.isWeb = true;
+    app.use(router);
   }
 
-  app.use(pinia);
-  app.use(i18n);
-
-  return { app, i18n };
+  return { app, i18n, router };
 }
