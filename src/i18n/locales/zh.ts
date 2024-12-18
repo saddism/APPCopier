@@ -1,5 +1,6 @@
 export default {
   nav: {
+    appTitle: 'APP 复制器',
     home: '首页',
     upload: '上传',
     login: '登录',

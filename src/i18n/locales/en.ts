@@ -1,5 +1,6 @@
 export default {
   nav: {
+    appTitle: 'APP Copier',
     home: 'Home',
     upload: 'Upload',
     login: 'Login',

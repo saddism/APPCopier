@@ -65,6 +65,9 @@ export function createApp() {
     app.config.globalProperties.isH5 = true;
     app.config.globalProperties.isWeb = true;
     app.use(router);
+
+    // Mount the app in H5/Web mode
+    app.mount('#app');
   }
 
   return { app, i18n, router };
