@@ -99,6 +99,7 @@
             "assetsSubDirectory": "static"
         },
         "appMode": "web",
-        "usingComponents": false
+        "usingComponents": false,
+        "renderMode": "webview"
     }
 }

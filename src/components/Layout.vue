@@ -21,7 +21,8 @@
       <slot></slot>
     </view>
 
-    <!-- Navigation footer -->
+    <!-- Navigation footer - Only show on non-H5 platforms -->
+    <!-- #ifndef H5 -->
     <view class="footer">
       <view class="nav-item" @click="navigateTo('/pages/index/index')">
         <text>{{ t('nav.home') }}</text>
@@ -36,6 +37,19 @@
         <text>{{ t('nav.dashboard') }}</text>
       </view>
     </view>
+    <!-- #endif -->
+
+    <!-- Web navigation - Only show on H5 platform -->
+    <!-- #ifdef H5 -->
+    <view class="web-nav">
+      <view class="nav-links">
+        <text class="nav-link" @click="navigateTo('/pages/index/index')">{{ t('nav.home') }}</text>
+        <text class="nav-link" @click="navigateTo('/pages/products/index')">{{ t('nav.products') }}</text>
+        <text class="nav-link" @click="navigateTo('/pages/upload/index')">{{ t('nav.upload') }}</text>
+        <text class="nav-link" @click="navigateTo('/pages/dashboard/index')">{{ t('nav.dashboard') }}</text>
+      </view>
+    </view>
+    <!-- #endif -->
   </view>
 </template>
 
@@ -70,12 +84,15 @@ const handleLogout = async () => {
 </script>
 
 <style>
+/* Common styles */
 .layout {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
 
+/* Mobile styles */
+/* #ifndef H5 */
 .header {
   padding: 20rpx;
   background-color: #ffffff;
@@ -92,12 +109,6 @@ const handleLogout = async () => {
 .title {
   font-size: 32rpx;
   font-weight: bold;
-}
-
-.auth-section,
-.user-section {
-  display: flex;
-  gap: 20rpx;
 }
 
 .main-content {
@@ -117,15 +128,90 @@ const handleLogout = async () => {
   padding: 10rpx;
   text-align: center;
 }
+/* #endif */
+
+/* Web styles */
+/* #ifdef H5 */
+.header {
+  padding: 20px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #eaeaea;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.main-content {
+  max-width: 1200px;
+  margin: 80px auto 0;
+  padding: 20px;
+  flex: 1;
+}
+
+.web-nav {
+  background-color: #ffffff;
+  padding: 15px 0;
+  border-bottom: 1px solid #eaeaea;
+  position: fixed;
+  top: 70px;
+  left: 0;
+  right: 0;
+  z-index: 99;
+}
+
+.nav-links {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  gap: 30px;
+  padding: 0 20px;
+}
+
+.nav-link {
+  color: #333;
+  cursor: pointer;
+  font-size: 16px;
+  transition: color 0.2s;
+}
+
+.nav-link:hover {
+  color: #007aff;
+}
 
 button {
-  padding: 10rpx 20rpx;
-  border-radius: 8rpx;
+  padding: 8px 16px;
+  border-radius: 4px;
   background-color: #007aff;
   color: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border: none;
 }
 
-button:active {
-  opacity: 0.8;
+button:hover {
+  background-color: #0056b3;
 }
+
+.auth-section,
+.user-section {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+/* #endif */
 </style>

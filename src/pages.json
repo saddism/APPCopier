@@ -46,7 +46,8 @@
 			"titleNView": false,
 			"navigationBarTextStyle": "black",
 			"navigationStyle": "custom",
-			"navigationBar": false
+			"navigationBar": false,
+			"renderingMode": "webview"
 		}
 	},
 	"tabBar": {
