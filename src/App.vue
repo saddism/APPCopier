@@ -1,5 +1,5 @@
 <template>
-  <view :class="{ 'h5-mode': isH5Platform }">
+  <view :class="{ 'h5-mode': isH5Platform || isWebPlatform }">
     <Layout>
       <slot></slot>
     </Layout>
@@ -16,39 +16,55 @@ import { useUserStore } from '@/stores/user'
 const { locale } = useI18n()
 const userStore = useUserStore()
 const isH5Platform = ref(false)
+const isWebPlatform = ref(false)
 
 // Platform detection helper
-const detectH5Platform = () => {
+const detectPlatform = () => {
   try {
-    const systemInfo = uni.getSystemInfoSync();
-    const platform = systemInfo.platform.toLowerCase();
-    isH5Platform.value = platform === 'web' || platform === 'h5' ||
-                        (typeof window !== 'undefined' && typeof document !== 'undefined');
+    const systemInfo = uni.getSystemInfoSync()
+    console.log('App.vue Raw System Info:', systemInfo)
 
-    console.log('Platform Detection:', {
-      platform,
+    // Check if running in H5/Web environment
+    const isWeb = systemInfo?.platform?.toLowerCase() === 'web'
+    const isBrowser = typeof window !== 'undefined' && typeof document !== 'undefined'
+    isH5Platform.value = isBrowser
+    isWebPlatform.value = isWeb || isBrowser
+
+    // Force H5/Web mode styles
+    if ((isH5Platform.value || isWebPlatform.value) && typeof document !== 'undefined') {
+      document.documentElement.classList.add('h5-mode')
+      document.documentElement.classList.remove('uni-app--showtabbar')
+
+      // Force immediate style application
+      document.documentElement.style.setProperty('display', 'flex', 'important')
+      document.documentElement.style.setProperty('flex-direction', 'column', 'important')
+    }
+
+    console.log('App.vue Platform Detection:', {
+      rawPlatform: systemInfo?.platform,
+      isWeb,
+      isBrowser,
       isH5: isH5Platform.value,
-      hasWindow: typeof window !== 'undefined',
-      hasDocument: typeof document !== 'undefined'
-    });
+      isWebPlatform: isWebPlatform.value,
+      userAgent: window?.navigator?.userAgent
+    })
   } catch (error) {
-    console.error('Platform detection error:', error);
-    isH5Platform.value = false;
+    console.error('Platform detection error:', error)
+    // Fallback to browser check in case of error
+    const hasBrowser = typeof window !== 'undefined'
+    isH5Platform.value = hasBrowser
+    isWebPlatform.value = hasBrowser
   }
 }
 
 onMounted(() => {
-  detectH5Platform()
-  // Force immediate style application if H5
-  if (isH5Platform.value && typeof document !== 'undefined') {
-    document.documentElement.classList.add('h5-mode');
-  }
+  detectPlatform()
   const savedLanguage = uni.getStorageSync('language') || 'zh'
   locale.value = savedLanguage
 })
 
 onLaunch(() => {
-  detectH5Platform()
+  detectPlatform()
   const savedLanguage = uni.getStorageSync('language')
   if (savedLanguage) {
     locale.value = savedLanguage
@@ -57,7 +73,7 @@ onLaunch(() => {
 })
 
 onShow(() => {
-  detectH5Platform()
+  detectPlatform()
 })
 
 onHide(() => {

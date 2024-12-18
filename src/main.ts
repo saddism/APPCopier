@@ -10,52 +10,60 @@ declare const uni: any;
 const getPlatformInfo = () => {
   try {
     const systemInfo = uni.getSystemInfoSync();
-    // Force H5 mode in browser environment
     const isH5 = typeof window !== 'undefined' && typeof document !== 'undefined';
-    const platform = isH5 ? 'h5' : systemInfo.platform.toLowerCase();
+    const platform = systemInfo?.platform?.toLowerCase() || 'unknown';
 
-    console.log('Platform Detection:', {
-      platform,
+    console.log('Main.ts Platform Detection:', {
+      rawSystemInfo: systemInfo,
       isH5,
+      platform,
       hasWindow: typeof window !== 'undefined',
       hasDocument: typeof document !== 'undefined',
-      systemInfo
+      userAgent: window?.navigator?.userAgent
     });
 
-    return { isH5, platform };
+    return {
+      isH5,
+      platform,
+      isWeb: platform === 'web' || isH5
+    };
   } catch (error) {
     console.error('Platform detection error:', error);
-    return { isH5: false, platform: 'unknown' };
+    return {
+      isH5: typeof window !== 'undefined',
+      platform: 'unknown',
+      isWeb: typeof window !== 'undefined'
+    };
   }
 };
 
 export function createApp() {
   const app = createSSRApp(App);
   const pinia = createPinia();
-  const { isH5 } = getPlatformInfo();
+  const { isH5, isWeb } = getPlatformInfo();
 
   // Initialize i18n with stored language preference
   const savedLanguage = uni.getStorageSync('language') || 'zh';
-  const i18nInstance = i18n;
-  i18nInstance.global.locale.value = savedLanguage;
+  i18n.global.locale.value = savedLanguage;
 
   // Configure i18n settings
-  i18nInstance.global.fallbackWarn = false;
-  i18nInstance.global.missingWarn = false;
+  i18n.global.fallbackWarn = false;
+  i18n.global.missingWarn = false;
 
   // Set platform-specific configurations
-  if (isH5 && typeof document !== 'undefined') {
-    document.documentElement.classList.add('h5-mode');
-    // Force immediate style application
-    document.documentElement.style.display = 'flex';
-    document.documentElement.style.flexDirection = 'column';
+  if (isH5 || isWeb) {
+    console.log('Initializing H5/Web mode');
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.add('h5-mode');
+      document.documentElement.style.setProperty('display', 'flex', 'important');
+      document.documentElement.style.setProperty('flex-direction', 'column', 'important');
+    }
     app.config.globalProperties.isH5 = true;
+    app.config.globalProperties.isWeb = true;
   }
 
   app.use(pinia);
-  app.use(i18nInstance);
-  app.config.globalProperties.$i18n = i18nInstance;
-  app.config.globalProperties.$t = i18nInstance.global.t;
+  app.use(i18n);
 
-  return { app, i18n: i18nInstance };
+  return { app, i18n };
 }
