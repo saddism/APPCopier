@@ -103,7 +103,7 @@ onMounted(() => {
 const navigateTo = (url: string) => {
   if (isH5Platform.value) {
     // Use router.push for H5 navigation
-    const h5Path = url.replace('/pages', '')
+    const h5Path = url.replace('/pages', '').replace('/index', '')
     router.push(h5Path)
   } else {
     uni.navigateTo({ url })
