@@ -1,14 +1,14 @@
 export default {
-  nav: {
-    appTitle: 'APP 复制器',
-    home: '首页',
-    upload: '上传',
-    login: '登录',
-    dashboard: '控制台',
-    products: '产品',
-    productDetail: '产品详情'
-  },
   message: {
+    nav: {
+      appTitle: 'APP 复制器',
+      home: '首页',
+      upload: '上传',
+      login: '登录',
+      dashboard: '控制台',
+      products: '产品',
+      productDetail: '产品详情'
+    },
     hello: '你好',
     upload: {
       title: '视频上传',

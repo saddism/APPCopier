@@ -1,21 +1,21 @@
 <template>
   <view class="login">
-    <text class="title">{{ $t('message.auth.login') }}</text>
+    <text class="title">{{ t('message.auth.login') }}</text>
     <view class="form">
       <input
         type="text"
-        :placeholder="$t('message.auth.email')"
+        :placeholder="t('message.auth.email')"
         v-model="email"
         class="input"
       />
       <input
         type="password"
-        :placeholder="$t('message.auth.password')"
+        :placeholder="t('message.auth.password')"
         v-model="password"
         class="input"
       />
       <button class="submit-btn" @click="handleLogin">
-        {{ $t('message.auth.submit') }}
+        {{ t('message.auth.submit') }}
       </button>
     </view>
   </view>

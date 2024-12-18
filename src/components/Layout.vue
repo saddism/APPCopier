@@ -3,14 +3,14 @@
     <!-- Web/H5 Header -->
     <view v-if="isH5Platform" class="header">
       <view class="header-content">
-        <text class="title">{{ t('nav.appTitle') }}</text>
+        <text class="title">{{ t('message.nav.appTitle') }}</text>
         <view class="auth-section" v-if="!userStore.isAuthenticated">
-          <button @click="navigateToLogin">{{ t('auth.login') }}</button>
-          <button @click="navigateToRegister">{{ t('auth.register') }}</button>
+          <button @click="navigateToLogin">{{ t('message.auth.login') }}</button>
+          <button @click="navigateToRegister">{{ t('message.auth.register.title') }}</button>
         </view>
         <view class="user-section" v-else>
-          <text>{{ t('auth.welcome') }}, {{ userStore.user?.email }}</text>
-          <button @click="handleLogout">{{ t('auth.logout') }}</button>
+          <text>{{ t('message.auth.welcome') }}, {{ userStore.user?.email }}</text>
+          <button @click="handleLogout">{{ t('message.auth.logout') }}</button>
         </view>
       </view>
       <LanguageSwitcher />
@@ -19,24 +19,24 @@
     <!-- Web/H5 Navigation -->
     <view v-if="isH5Platform" class="web-nav">
       <view class="nav-links">
-        <text class="nav-link" @click="navigateTo('/pages/index/index')">{{ t('nav.home') }}</text>
-        <text class="nav-link" @click="navigateTo('/pages/products/index')">{{ t('nav.products') }}</text>
-        <text class="nav-link" @click="navigateTo('/pages/upload/index')">{{ t('nav.upload') }}</text>
-        <text class="nav-link" @click="navigateTo('/pages/dashboard/index')">{{ t('nav.dashboard') }}</text>
+        <text class="nav-link" @click="navigateTo('/pages/index/index')">{{ t('message.nav.home') }}</text>
+        <text class="nav-link" @click="navigateTo('/pages/products/index')">{{ t('message.nav.products') }}</text>
+        <text class="nav-link" @click="navigateTo('/pages/upload/index')">{{ t('message.nav.upload') }}</text>
+        <text class="nav-link" @click="navigateTo('/pages/dashboard/index')">{{ t('message.nav.dashboard') }}</text>
       </view>
     </view>
 
     <!-- Mobile Header -->
     <view v-if="!isH5Platform" class="header">
       <view class="header-content">
-        <text class="title">{{ t('nav.appTitle') }}</text>
+        <text class="title">{{ t('message.nav.appTitle') }}</text>
         <view class="auth-section" v-if="!userStore.isAuthenticated">
-          <button @click="navigateToLogin">{{ t('auth.login') }}</button>
-          <button @click="navigateToRegister">{{ t('auth.register') }}</button>
+          <button @click="navigateToLogin">{{ t('message.auth.login') }}</button>
+          <button @click="navigateToRegister">{{ t('message.auth.register.title') }}</button>
         </view>
         <view class="user-section" v-else>
-          <text>{{ t('auth.welcome') }}, {{ userStore.user?.email }}</text>
-          <button @click="handleLogout">{{ t('auth.logout') }}</button>
+          <text>{{ t('message.auth.welcome') }}, {{ userStore.user?.email }}</text>
+          <button @click="handleLogout">{{ t('message.auth.logout') }}</button>
         </view>
       </view>
       <LanguageSwitcher />
@@ -50,16 +50,16 @@
     <!-- Mobile Navigation Footer -->
     <view v-if="!isH5Platform" class="footer">
       <view class="nav-item" @click="navigateTo('/pages/index/index')">
-        <text>{{ t('nav.home') }}</text>
+        <text>{{ t('message.nav.home') }}</text>
       </view>
       <view class="nav-item" @click="navigateTo('/pages/products/index')">
-        <text>{{ t('nav.products') }}</text>
+        <text>{{ t('message.nav.products') }}</text>
       </view>
       <view class="nav-item" @click="navigateTo('/pages/upload/index')">
-        <text>{{ t('nav.upload') }}</text>
+        <text>{{ t('message.nav.upload') }}</text>
       </view>
       <view class="nav-item" @click="navigateTo('/pages/dashboard/index')">
-        <text>{{ t('nav.dashboard') }}</text>
+        <text>{{ t('message.nav.dashboard') }}</text>
       </view>
     </view>
   </view>
@@ -129,7 +129,7 @@ const navigateToRegister = () => {
 const handleLogout = async () => {
   await userStore.logout()
   uni.showToast({
-    title: t('auth.logoutSuccess'),
+    title: t('message.auth.logoutSuccess'),
     icon: 'success'
   })
   if (isH5Platform.value) {

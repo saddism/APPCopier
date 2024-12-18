@@ -1,14 +1,14 @@
 export default {
-  nav: {
-    appTitle: 'APP Copier',
-    home: 'Home',
-    upload: 'Upload',
-    login: 'Login',
-    dashboard: 'Dashboard',
-    products: 'Products',
-    productDetail: 'Product Details'
-  },
   message: {
+    nav: {
+      appTitle: 'APP Copier',
+      home: 'Home',
+      upload: 'Upload',
+      login: 'Login',
+      dashboard: 'Dashboard',
+      products: 'Products',
+      productDetail: 'Product Details'
+    },
     hello: 'Hello',
     upload: {
       title: 'Video Upload',
