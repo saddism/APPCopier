@@ -52,7 +52,7 @@
 	},
 	"tabBar": {
 		"condition": {
-			"exclude": ["H5"]
+			"platform": ["android", "ios"]
 		},
 		"color": "#7A7E83",
 		"selectedColor": "#3cc51f",
@@ -61,19 +61,19 @@
 		"list": [
 			{
 				"pagePath": "pages/index/index",
-				"text": "%nav.home%"
+				"text": "首页"
 			},
 			{
 				"pagePath": "pages/upload/index",
-				"text": "%nav.upload%"
+				"text": "上传"
 			},
 			{
 				"pagePath": "pages/products/index",
-				"text": "%nav.products%"
+				"text": "产品"
 			},
 			{
 				"pagePath": "pages/dashboard/index",
-				"text": "%nav.dashboard%"
+				"text": "仪表板"
 			}
 		]
 	},

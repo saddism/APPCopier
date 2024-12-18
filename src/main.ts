@@ -11,6 +11,9 @@ export function createApp() {
   // Initialize i18n with stored language preference
   const savedLanguage = uni.getStorageSync('language') || 'zh';
   const i18nInstance = i18n;
+
+  // Force immediate locale setup
+  uni.setStorageSync('language', savedLanguage);
   i18nInstance.global.locale.value = savedLanguage;
 
   // Configure i18n settings
@@ -25,7 +28,8 @@ export function createApp() {
       'nav.products': '产品',
       'nav.dashboard': '仪表板',
       'nav.login': '登录',
-      'nav.productDetail': '产品详情'
+      'nav.productDetail': '产品详情',
+      'nav.appTitle': 'APP分析工具'
     },
     'en': {
       'nav.home': 'Home',
@@ -33,13 +37,21 @@ export function createApp() {
       'nav.products': 'Products',
       'nav.dashboard': 'Dashboard',
       'nav.login': 'Login',
-      'nav.productDetail': 'Product Detail'
+      'nav.productDetail': 'Product Detail',
+      'nav.appTitle': 'APP Analyzer'
     }
-  };
+  } as const;
 
-  // Merge navigation translations
-  i18nInstance.global.mergeLocaleMessage('zh', navTranslations.zh);
-  i18nInstance.global.mergeLocaleMessage('en', navTranslations.en);
+  // Merge navigation translations immediately
+  (Object.keys(navTranslations) as Array<keyof typeof navTranslations>).forEach(locale => {
+    i18nInstance.global.mergeLocaleMessage(locale, navTranslations[locale]);
+  });
+
+  // Force platform detection for H5
+  const platform = uni.getSystemInfoSync().platform;
+  if (platform === 'web') {
+    app.config.globalProperties.isH5 = true;
+  }
 
   app.use(pinia);
   app.use(i18nInstance);

@@ -1,6 +1,7 @@
 <template>
-  <view class="layout">
-    <!-- Header with language switcher -->
+  <!-- Web-only layout -->
+  <!-- #ifdef H5 -->
+  <view class="layout web-layout">
     <view class="header">
       <view class="header-content">
         <text class="title">{{ t('nav.appTitle') }}</text>
@@ -16,13 +17,43 @@
       <LanguageSwitcher />
     </view>
 
-    <!-- Main content area -->
+    <view class="web-nav">
+      <view class="nav-links">
+        <text class="nav-link" @click="navigateTo('/pages/index/index')">{{ t('nav.home') }}</text>
+        <text class="nav-link" @click="navigateTo('/pages/products/index')">{{ t('nav.products') }}</text>
+        <text class="nav-link" @click="navigateTo('/pages/upload/index')">{{ t('nav.upload') }}</text>
+        <text class="nav-link" @click="navigateTo('/pages/dashboard/index')">{{ t('nav.dashboard') }}</text>
+      </view>
+    </view>
+
+    <view class="main-content">
+      <slot></slot>
+    </view>
+  </view>
+  <!-- #endif -->
+
+  <!-- Mobile-only layout -->
+  <!-- #ifndef H5 -->
+  <view class="layout mobile-layout">
+    <view class="header">
+      <view class="header-content">
+        <text class="title">{{ t('nav.appTitle') }}</text>
+        <view class="auth-section" v-if="!userStore.isAuthenticated">
+          <button @click="navigateToLogin">{{ t('auth.login') }}</button>
+          <button @click="navigateToRegister">{{ t('auth.register') }}</button>
+        </view>
+        <view class="user-section" v-else>
+          <text>{{ t('auth.welcome') }}, {{ userStore.user?.email }}</text>
+          <button @click="handleLogout">{{ t('auth.logout') }}</button>
+        </view>
+      </view>
+      <LanguageSwitcher />
+    </view>
+
     <view class="main-content">
       <slot></slot>
     </view>
 
-    <!-- Navigation footer - Only show on non-H5 platforms -->
-    <!-- #ifndef H5 -->
     <view class="footer">
       <view class="nav-item" @click="navigateTo('/pages/index/index')">
         <text>{{ t('nav.home') }}</text>
@@ -37,20 +68,8 @@
         <text>{{ t('nav.dashboard') }}</text>
       </view>
     </view>
-    <!-- #endif -->
-
-    <!-- Web navigation - Only show on H5 platform -->
-    <!-- #ifdef H5 -->
-    <view class="web-nav">
-      <view class="nav-links">
-        <text class="nav-link" @click="navigateTo('/pages/index/index')">{{ t('nav.home') }}</text>
-        <text class="nav-link" @click="navigateTo('/pages/products/index')">{{ t('nav.products') }}</text>
-        <text class="nav-link" @click="navigateTo('/pages/upload/index')">{{ t('nav.upload') }}</text>
-        <text class="nav-link" @click="navigateTo('/pages/dashboard/index')">{{ t('nav.dashboard') }}</text>
-      </view>
-    </view>
-    <!-- #endif -->
   </view>
+  <!-- #endif -->
 </template>
 
 <script setup lang="ts">
