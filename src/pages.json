@@ -48,7 +48,11 @@
       "navigationStyle": "custom",
       "navigationBar": false,
       "renderingMode": "browser",
-      "usingComponents": false
+      "usingComponents": false,
+      "router": {
+        "mode": "history",
+        "base": "/"
+      }
     }
   },
   "tabBar": {
