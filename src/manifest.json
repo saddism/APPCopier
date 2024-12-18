@@ -93,6 +93,12 @@
             "error": "AsyncError",
             "delay": 200,
             "timeout": 3000
-        }
+        },
+        "build": {
+            "assetsPublicPath": "/",
+            "assetsSubDirectory": "static"
+        },
+        "appMode": "web",
+        "usingComponents": false
     }
 }

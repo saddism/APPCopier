@@ -41,9 +41,18 @@
 		"navigationBarTextStyle": "black",
 		"navigationBarTitleText": "APPCopier",
 		"navigationBarBackgroundColor": "#F8F8F8",
-		"backgroundColor": "#F8F8F8"
+		"backgroundColor": "#F8F8F8",
+		"h5": {
+			"titleNView": false,
+			"navigationBarTextStyle": "black",
+			"navigationStyle": "custom",
+			"navigationBar": false
+		}
 	},
 	"tabBar": {
+		"condition": {
+			"exclude": ["H5"]
+		},
 		"color": "#7A7E83",
 		"selectedColor": "#3cc51f",
 		"borderStyle": "black",
