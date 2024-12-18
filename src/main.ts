@@ -3,7 +3,7 @@ import { createPinia } from 'pinia';
 import App from "./App.vue";
 import i18n from './i18n';
 import './utils/navigation';
-import router from './router';
+import router from './router/index';
 
 declare const uni: any;
 

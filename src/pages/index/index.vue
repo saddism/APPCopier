@@ -1,17 +1,20 @@
 <template>
-  <view class="content">
-    <image class="logo" src="/static/logo.png" />
-    <view class="text-area">
-      <text class="title">{{ $t('message.hello') }}</text>
+  <Layout>
+    <view class="content">
+      <image class="logo" src="/static/logo.png" />
+      <view class="text-area">
+        <text class="title">{{ $t('message.hello') }}</text>
+      </view>
+      <router-link to="/upload" class="nav-btn">
+        {{ $t('message.upload.title') }}
+      </router-link>
     </view>
-    <navigator url="/pages/upload/index" class="nav-btn">
-      {{ $t('message.upload.title') }}
-    </navigator>
-  </view>
+  </Layout>
 </template>
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import Layout from '../../components/Layout.vue'
 
 const { t } = useI18n()
 </script>
@@ -46,6 +49,7 @@ const { t } = useI18n()
 }
 
 .nav-btn {
+  display: inline-block;
   margin-top: 30rpx;
   padding: 20rpx 40rpx;
   background-color: #007AFF;

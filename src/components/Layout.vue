@@ -68,10 +68,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import LanguageSwitcher from './LanguageSwitcher.vue'
 
 const { t } = useI18n()
+const router = useRouter()
 const userStore = useUserStore()
 const isH5Platform = ref(false)
 
@@ -100,9 +102,9 @@ onMounted(() => {
 
 const navigateTo = (url: string) => {
   if (isH5Platform.value) {
-    // Remove '/pages' prefix for H5 navigation
+    // Use router.push for H5 navigation
     const h5Path = url.replace('/pages', '')
-    window.location.href = h5Path
+    router.push(h5Path)
   } else {
     uni.navigateTo({ url })
   }
@@ -110,7 +112,7 @@ const navigateTo = (url: string) => {
 
 const navigateToLogin = () => {
   if (isH5Platform.value) {
-    window.location.href = '/auth/login'
+    router.push('/auth/login')
   } else {
     uni.navigateTo({ url: '/pages/auth/login' })
   }
@@ -118,7 +120,7 @@ const navigateToLogin = () => {
 
 const navigateToRegister = () => {
   if (isH5Platform.value) {
-    window.location.href = '/auth/register'
+    router.push('/auth/register')
   } else {
     uni.navigateTo({ url: '/pages/auth/register' })
   }
@@ -131,7 +133,7 @@ const handleLogout = async () => {
     icon: 'success'
   })
   if (isH5Platform.value) {
-    window.location.href = '/'
+    router.push('/')
   } else {
     uni.reLaunch({ url: '/pages/index/index' })
   }
